@@ -1,4 +1,13 @@
 package com.codeit.findex.dto.data;
 
-public record CursorPageResponseIndexDataDto() {
+import java.util.List;
+
+public record CursorPageResponseIndexDataDto(
+        List<IndexDataDto> content,
+        Long nextCursor,
+        String nextIdAfter,
+        int size,
+        long totalElements,
+        boolean hasNext
+) {
 }
