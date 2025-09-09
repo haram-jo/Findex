@@ -1,7 +1,7 @@
 package com.codeit.findex.dto.request;
 import lombok.*;
 
-/* 지수 등록하는
+/* 지수 등록
  * 요청 DTO
  */
 

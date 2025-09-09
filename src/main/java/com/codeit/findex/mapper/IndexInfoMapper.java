@@ -23,8 +23,7 @@ public class IndexInfoMapper {
         .basePointInTime(request.getBasePointInTime())
         .baseIndex(request.getBaseIndex())
         .favorite(request.getFavorite())
-        .sourceType(SourceType.USER) // User로 일단 고정, Open API 받아오고 연동 후 수정 예정
-
+        .sourceType(SourceType.USER) // User가 직접 지수 등록하는 걸로 고정
         .build();
   }
 

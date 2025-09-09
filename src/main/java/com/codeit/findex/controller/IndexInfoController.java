@@ -21,6 +21,7 @@ public class IndexInfoController {
 
   private final IndexInfoService indexInfoService;
 
+  //지수 등록
   @PostMapping
   public ResponseEntity<IndexInfoDto> createIndexInfo(@RequestBody IndexInfoCreateRequest request) {
     IndexInfoDto response = indexInfoService.createIndexInfo(request);

@@ -33,7 +33,7 @@ public class IndexInfo {
   private Double baseIndex;           // 기준 지수
 
   @Enumerated(EnumType.STRING)
-  private SourceType sourceType;      // 출처 (OPEN_API OR User 연동)
+  private SourceType sourceType;      // 출처 (User가 등록)
 
   private Boolean favorite;           // 즐겨찾기 여부
 }
