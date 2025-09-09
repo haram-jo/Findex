@@ -54,7 +54,8 @@ public class BasicIndexInfoService implements IndexInfoService {
     // 4. DTO 변환해서 반환
     return indexInfoMapper.toDto(updated);
    }
-
+   
+   //삭제
   @Override
   @Transactional //여러 필드 중 하나라도 없으면 rollback
   public void deleteIndexInfo(Long id) {
