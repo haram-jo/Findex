@@ -5,18 +5,13 @@ import lombok.*;
  * 요청 DTO
  */
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class IndexInfoCreateRequest {
+public record IndexInfoCreateRequest(
+    String indexClassification,
+    String indexName,
+    Integer employedItemsCount,
+    String basePointInTime, // YYYY-MM-DD
+    Double baseIndex,
+    Boolean favorite
+) {}
 
-  private String indexClassification;
-  private String indexName;
-  private Integer employedItemsCount;
-  private String basePointInTime; // YYYY-MM-DD
-  private Double baseIndex;
-  private Boolean favorite;
-}
 

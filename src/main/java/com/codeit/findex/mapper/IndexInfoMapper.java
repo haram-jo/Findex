@@ -11,34 +11,33 @@ import com.codeit.findex.entity.IndexInfo;
 /* IndexInfo Entity <-> DTO 변환 담당
 */
 
-
 public class IndexInfoMapper {
 
   // CreateRequest → Entity
   public static IndexInfo toEntity(IndexInfoCreateRequest request) {
     return IndexInfo.builder()
-        .indexClassification(request.getIndexClassification())
-        .indexName(request.getIndexName())
-        .employedItemsCount(request.getEmployedItemsCount())
-        .basePointInTime(request.getBasePointInTime())
-        .baseIndex(request.getBaseIndex())
-        .favorite(request.getFavorite())
+        .indexClassification(request.indexClassification())
+        .indexName(request.indexName())
+        .employedItemsCount(request.employedItemsCount())
+        .basePointInTime(request.basePointInTime())
+        .baseIndex(request.baseIndex())
+        .favorite(request.favorite())
         .sourceType(SourceType.USER) // User가 직접 지수 등록하는 걸로 고정
         .build();
   }
 
   // Entity → Dto
   public static IndexInfoDto toDto(IndexInfo entity) {
-    return IndexInfoDto.builder()
-        .id(entity.getId())
-        .indexClassification(entity.getIndexClassification())
-        .indexName(entity.getIndexName())
-        .employedItemsCount(entity.getEmployedItemsCount())
-        .basePointInTime(entity.getBasePointInTime())
-        .baseIndex(entity.getBaseIndex())
-        .sourceType(entity.getSourceType())
-        .favorite(entity.getFavorite())
-        .build();
+    return new IndexInfoDto(
+        entity.getId(),
+        entity.getIndexClassification(),
+        entity.getIndexName(),
+        entity.getEmployedItemsCount(),
+        entity.getBasePointInTime(),
+        entity.getBaseIndex(),
+        entity.getSourceType(),
+        entity.getFavorite()
+    );
   }
 }
 
