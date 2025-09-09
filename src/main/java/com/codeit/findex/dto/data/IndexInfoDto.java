@@ -17,4 +17,3 @@ public record IndexInfoDto(
     SourceType sourceType, // 정보 출처(Open API인지, 직접 등록했는지)
     Boolean favorite // 즐겨찾기 여부
 ) {}
-

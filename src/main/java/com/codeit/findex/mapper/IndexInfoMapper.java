@@ -9,7 +9,6 @@ import com.codeit.findex.dto.request.IndexInfoCreateRequest;
 import com.codeit.findex.entity.IndexInfo;
 
 /* IndexInfo Entity <-> DTO 변환 담당
- * @MapStruct로 수정해야함
 */
 
 public class IndexInfoMapper {
