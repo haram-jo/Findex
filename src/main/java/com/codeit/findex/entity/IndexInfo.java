@@ -36,4 +36,21 @@ public class IndexInfo {
   private SourceType sourceType;      // 출처 (User가 등록)
 
   private Boolean favorite;           // 즐겨찾기 여부
+
+
+  /* 지수 수정 메서드
+  * 엔티티 setter 지양을 위해  Update 허용 필드만 setter 허용
+  */
+  public void setEmployedItemsCount(Integer employedItemsCount) {
+    this.employedItemsCount = employedItemsCount;
+  }
+  public void setBasePointInTime(String basePointInTime) {
+    this.basePointInTime = basePointInTime;
+  }
+  public void setBaseIndex(Double baseIndex) {
+    this.baseIndex = baseIndex;
+  }
+  public void setFavorite(Boolean favorite) {
+    this.favorite = favorite;
+  }
 }

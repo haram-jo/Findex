@@ -5,6 +5,7 @@ package com.codeit.findex.dto.request;
  */
 
 public record IndexInfoCreateRequest(
+
     String indexClassification,
     String indexName,
     Integer employedItemsCount,
