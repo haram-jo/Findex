@@ -48,6 +48,11 @@ dependencies {
 
     //SnakeYAML 추가
     implementation 'org.yaml:snakeyaml:2.2'
+
+    //h2 DB 드라이브 의존성
+    implementation 'com.h2database:h2'
+
+
 }
 
 tasks.named('test') {

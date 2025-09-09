@@ -15,7 +15,7 @@ import jakarta.persistence.GenerationType;
 
 @Entity
 @Table(name = "index_infos")
-@Getter @Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

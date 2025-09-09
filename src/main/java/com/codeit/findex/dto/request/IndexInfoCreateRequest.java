@@ -5,6 +5,7 @@ import lombok.*;
  * 요청 DTO
  */
 
+@Builder
 public record IndexInfoCreateRequest(
     String indexClassification,
     String indexName,
