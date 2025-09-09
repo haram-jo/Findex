@@ -102,6 +102,10 @@ public class MarketIndexApiResponse {
         // 상장 시가 총액
         @JsonProperty("lstgMrktTotAmt")
         private String marketTotalAmount;
+
+        // 채용 종목 수
+        @JsonProperty("epyItmsCnt")
+        private String employedItemsCount;
     }
 
 
