@@ -8,6 +8,7 @@ import com.codeit.findex.service.IndexInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,5 +45,12 @@ public class IndexInfoController {
   public ResponseEntity<Void> deleteIndexInfo(@PathVariable Long id) {
     indexInfoService.deleteIndexInfo(id);
     return ResponseEntity.noContent().build(); //204 No Content 반환
+  }
+
+  //지수 조회 (단건)
+  @GetMapping("/{id}")
+  public ResponseEntity<IndexInfoDto> getIndexInfo(@PathVariable Long id) {
+    IndexInfoDto response = indexInfoService.getIndexInfo(id);
+    return ResponseEntity.ok(response);
   }
 }

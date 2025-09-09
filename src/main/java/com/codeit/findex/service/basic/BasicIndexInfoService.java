@@ -63,4 +63,13 @@ public class BasicIndexInfoService implements IndexInfoService {
         .orElseThrow(() -> new RuntimeException("지수 정보 찾을 수 없음"));
     indexInfoRepository.delete(indexInfo);
   }
+
+
+  //단건 조회
+  @Override
+  public IndexInfoDto getIndexInfo(Long id) {
+    IndexInfo indexInfo = indexInfoRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("지수 정보를 찾을 수 없음"));
+    return indexInfoMapper.toDto(indexInfo);
+  }
 }

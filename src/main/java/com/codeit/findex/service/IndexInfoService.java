@@ -15,4 +15,7 @@ public interface IndexInfoService {
 
   //지수 삭제
   void deleteIndexInfo(Long id);
+
+  //지수 단건 조회
+  IndexInfoDto getIndexInfo(Long id);
 }
