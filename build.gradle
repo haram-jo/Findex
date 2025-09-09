@@ -53,6 +53,10 @@ dependencies {
 
     //SnakeYAML 추가
     implementation 'org.yaml:snakeyaml:2.2'
+
+    //WebClientConfig 설정 추가
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
 }
 
 tasks.named('test') {

@@ -14,12 +14,13 @@ import org.springframework.stereotype.Service;
 public class BasicIndexInfoService implements IndexInfoService {
 
   private final IndexInfoRepository indexInfoRepository;
+  private final IndexInfoMapper indexInfoMapper;
 
   //생성
   @Override
   public IndexInfoDto createIndexInfo(IndexInfoCreateRequest request) {
-    IndexInfo entity = IndexInfoMapper.toEntity(request); //DTO ->Entity
+    IndexInfo entity = indexInfoMapper.toEntity(request); //DTO ->Entity
     IndexInfo saved = indexInfoRepository.save(entity); //DB 저장
-    return IndexInfoMapper.toDto(saved);
+    return indexInfoMapper.toDto(saved);
   }
 }
