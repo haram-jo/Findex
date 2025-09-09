@@ -18,8 +18,9 @@ public class IndexData {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "index_info_id", nullable = false)
-    private Long indexInfoId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "index_info_id", nullable = false)
+    private IndexInfo indexInfo;
 
     @Column(name = "base_date", nullable = false)
     private LocalDate baseDate;
@@ -55,13 +56,11 @@ public class IndexData {
     private Long marketTotalAmount; // 상장 시가 총액
 
 
-    //@ManyToOne(fetch = FetchType.LAZY)
-
     @Builder
-    public IndexData(Long indexInfoId, LocalDate baseDate, String sourceType, BigDecimal marketPrice,
+    public IndexData(IndexInfo indexInfo, LocalDate baseDate, String sourceType, BigDecimal marketPrice,
                      BigDecimal closingPrice, BigDecimal highPrice, BigDecimal lowPrice, BigDecimal versus,
                      BigDecimal fluctuationRate, Long tradingQuantity, Long tradingPrice, Long marketTotalAmount) {
-        this.indexInfoId = indexInfoId;
+        this.indexInfo = indexInfo;
         this.baseDate = baseDate;
         this.sourceType = sourceType;
         this.marketPrice = marketPrice;
