@@ -6,8 +6,8 @@ import lombok.*;
  */
 
 public record IndexInfoUpdateRequest(
-    Integer employedItemsCount,   // 기준이 되는 날짜
-    String basePointInTime, // 채용 종목수
+    Integer employedItemsCount, // 채용 종목수
+    String basePointInTime,  // 기준이 되는 날짜
     Double baseIndex, //지수 산출 값
     Boolean favorite
 ) {}
