@@ -1,7 +1,9 @@
 package com.codeit.findex.controller;
 
+import com.codeit.findex.dto.data.CursorPageResponseIndexDataDto;
 import com.codeit.findex.dto.data.IndexDataDto;
 import com.codeit.findex.dto.request.IndexDataCreateRequest;
+import com.codeit.findex.dto.request.IndexDataSearchCondition;
 import com.codeit.findex.dto.request.IndexDataUpdateRequest;
 import com.codeit.findex.service.IndexDataService;
 import jakarta.validation.Valid;
@@ -16,6 +18,13 @@ import org.springframework.web.bind.annotation.*;
 public class IndexDataController {
 
     private final IndexDataService indexDataService;
+
+    @GetMapping
+    public ResponseEntity<CursorPageResponseIndexDataDto> searchIndexData(
+            @ModelAttribute IndexDataSearchCondition condition) {
+        CursorPageResponseIndexDataDto response = indexDataService.searchIndexData(condition);
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping
     public ResponseEntity<IndexDataDto> createIndexData(

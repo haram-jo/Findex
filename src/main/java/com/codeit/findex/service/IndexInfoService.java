@@ -32,4 +32,3 @@ public interface IndexInfoService {
       Integer size
   );
 }
-

@@ -1,5 +1,6 @@
 package com.codeit.findex.service;
 
+import com.codeit.findex.dto.data.AutoSyncConfigDto;
 import com.codeit.findex.dto.data.CursorPageResponseAutoSyncConfigDto;
 import org.springframework.lang.Nullable;
 
@@ -14,4 +15,7 @@ public interface AutoSyncService {
             @Nullable String sortDirection,  // "asc" | "desc"
             @Nullable Integer size           // 페이지 크기(기본 10, cap 100)
     );
+
+    // PATCH 업데이트용 메서드
+    AutoSyncConfigDto updateEnabled(Long id, Boolean enabled);
 }
