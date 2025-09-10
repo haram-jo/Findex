@@ -1,5 +1,6 @@
 package com.codeit.findex.service.basic;
 
+import com.codeit.findex.dto.data.CursorPageResponseIndexInfoDto;
 import com.codeit.findex.dto.data.IndexInfoDto;
 import com.codeit.findex.dto.request.IndexInfoCreateRequest;
 import com.codeit.findex.dto.request.IndexInfoUpdateRequest;
@@ -8,6 +9,8 @@ import com.codeit.findex.mapper.IndexInfoMapper;
 import com.codeit.findex.repository.IndexInfoRepository;
 import com.codeit.findex.service.IndexInfoService;
 import jakarta.transaction.Transactional;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -72,4 +75,59 @@ public class BasicIndexInfoService implements IndexInfoService {
         .orElseThrow(() -> new RuntimeException("지수 정보를 찾을 수 없음"));
     return indexInfoMapper.toDto(indexInfo);
   }
-}
+
+  //여러 목록 조회
+  @Override
+  public CursorPageResponseIndexInfoDto getIndexInfoList(
+      String indexClassification,
+      String indexName,
+      Boolean favorite,
+      Long idAfter,
+      String cursor,
+      String sortField,
+      String sortDirection,
+      Integer size
+  ) {
+
+    //1. 조건에 맞는 데이터만 꺼내기
+    List<IndexInfo> entities = indexInfoRepository.findAllWithFilters(
+        indexClassification, indexName, favorite,
+        idAfter, cursor, sortField, sortDirection, size
+    );
+
+    //2. 엔티티 -> DTO로 변환
+    List<IndexInfoDto> dtoList = entities.stream()
+        .map(indexInfoMapper::toDto)
+        .toList();
+
+    //3. 전체 개수도 구하여 응답 (프론트: totalElements)
+    Long totalElements = indexInfoRepository.countWithFilters(
+        indexClassification, indexName, favorite
+    );
+
+    /* 커서 기반 페이징 처리에 필요한 계산
+     * 지금 페이지의 마지막 id를 nextCursor(커서)로 넘기고,
+     * 페이지가 끝났는지(hasNext)도 같이 알려줌
+     */
+    Long nextIdAfter = dtoList.isEmpty() //지금 page의 마지막 id
+        ? null // 비었으면 null
+        : dtoList.get(dtoList.size() - 1).id(); // 마지막 id 값을 cursor로 사용
+
+    String nextCursor = nextIdAfter == null
+        ? null //비었으면 null
+        : String.valueOf(nextIdAfter); //아니면 String으로 변환해서 저장
+
+    boolean hasNext = dtoList.size() == size; // 다음 page가 있는지 없는지의 여부
+
+    //4. 프론트에서 원하는 응답으로 반환
+    return new CursorPageResponseIndexInfoDto(
+        dtoList,        // 내용
+        nextCursor,     // 다음 페이지 커서
+        nextIdAfter,    // 마지막 요소의 ID
+        size,           // 페이지 크기
+        totalElements,  // 전체 개수
+        hasNext         // 다음 페이지 여부
+    );
+   }
+  }
+
