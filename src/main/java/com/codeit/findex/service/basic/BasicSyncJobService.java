@@ -3,6 +3,7 @@ package com.codeit.findex.service.basic;
 import com.codeit.findex.dto.data.CursorPageResponseSyncJobDto;
 import com.codeit.findex.dto.data.SyncJobDto;
 import com.codeit.findex.dto.request.IndexDataSyncRequest;
+import com.codeit.findex.dto.request.SyncJobSearchRequest;
 import com.codeit.findex.dto.response.MarketIndexApiResponse;
 import com.codeit.findex.entity.*;
 import com.codeit.findex.mapper.SyncJobMapper;
@@ -41,7 +42,7 @@ public class BasicSyncJobService implements SyncJobService {
 
     @Transactional
     @Override
-    public List<SyncJobDto> createSyncJob(String workerId) {
+    public List<SyncJobDto> createIndexInfoSyncJob(String workerId) {
         // 1. 지수 정보 DB에 저장
         createIndexInfos();
 
@@ -85,13 +86,13 @@ public class BasicSyncJobService implements SyncJobService {
     }
 
     @Override
-    public MarketIndexApiResponse findAll() {
+    public MarketIndexApiResponse findAll(SyncJobSearchRequest request) {
+
         MarketIndexApiResponse response = getFromOpenApiByPage(1, 100);
         return response;
     }
 
     /** OpenApi에서 받아온 데이터를 Index_Data DB에 저장 */
-
     public void createIndexData(IndexDataSyncRequest request) {
 
         // 1. request에서 준 날짜 형식 변환(검색용)
@@ -142,8 +143,6 @@ public class BasicSyncJobService implements SyncJobService {
         indexDataRepository.saveAll(indexDataList);
     }
 
-
-
     /** OpenApi에서 받아온 데이터로 Index_infos 값에 매핑 후 DB에 저장 */
     public void createIndexInfos() {
         int pageNo = 1;
@@ -181,8 +180,6 @@ public class BasicSyncJobService implements SyncJobService {
             if(pageNo == 5) break;
         }
     }
-
-
 
     public MarketIndexApiResponse getFromOpenApiByPage(int pageNo, int numOfRows) {
         return financeWebClient.get()
