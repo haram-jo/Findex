@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface SyncJobService {
 
+    void createSyncJob(String workerId);
     public MarketIndexApiResponse findAll();
-
 }

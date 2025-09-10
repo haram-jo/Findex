@@ -7,7 +7,8 @@ CREATE TABLE index_infos (
     base_point_in_time      DATE,                       -- date
     base_index              NUMERIC(20, 4),             -- number (정밀도 유지용)
     source_type             VARCHAR(100),               -- string
-    favorite                BOOLEAN DEFAULT FALSE       -- boolean
+    favorite                BOOLEAN DEFAULT FALSE,       -- boolean
+    CONSTRAINT uq_index_infos UNIQUE (index_classification, index_name)
 );
 
 -- 지수 데이터 (Index_Data)
