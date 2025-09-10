@@ -15,8 +15,6 @@ public interface IndexDataMapper {
   @Mapping(target = "sourceType", source = "sourceType")
   IndexData toEntity(IndexDataCreateRequest request, IndexInfo indexInfo, String sourceType);
 
-  IndexData toEntity(IndexDataCreateRequest request);
-
   @Mapping(source = "indexInfo.id", target = "indexInfoId")
   IndexDataDto toDto(IndexData entity);
 
