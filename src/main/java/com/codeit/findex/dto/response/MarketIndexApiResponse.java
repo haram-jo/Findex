@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -69,39 +70,39 @@ public class MarketIndexApiResponse {
 
         // 시가
         @JsonProperty("mkp")
-        private String marketPrice;
+        private BigDecimal marketPrice;
 
         // 종가
         @JsonProperty("clpr")
-        private String closingPrice;
+        private BigDecimal closingPrice;
 
         // 고가
         @JsonProperty("hipr")
-        private String highPrice;
+        private BigDecimal highPrice;
 
         // 저가
         @JsonProperty("lopr")
-        private String lowPrice;
+        private BigDecimal lowPrice;
 
         // 대비
         @JsonProperty("vs")
-        private String versus;
+        private BigDecimal versus;
 
         // 등락률
         @JsonProperty("fltRt")
-        private String fluctuationRate;
+        private BigDecimal fluctuationRate;
 
         // 거래량
         @JsonProperty("trqu")
-        private String tradingQuantity;
+        private Long tradingQuantity;
 
         // 거래대금
         @JsonProperty("trPrc")
-        private String tradingPrice;
+        private Long tradingPrice;
 
         // 상장 시가 총액
         @JsonProperty("lstgMrktTotAmt")
-        private String marketTotalAmount;
+        private Long marketTotalAmount;
 
         // 채용 종목 수
         @JsonProperty("epyItmsCnt")

@@ -6,6 +6,7 @@ import com.codeit.findex.dto.request.IndexDataSyncRequest;
 import com.codeit.findex.dto.response.MarketIndexApiResponse;
 import com.codeit.findex.entity.*;
 import com.codeit.findex.mapper.SyncJobMapper;
+import com.codeit.findex.repository.IndexDataRepository;
 import com.codeit.findex.repository.IndexInfoRepository;
 import com.codeit.findex.repository.SyncJobRepository;
 import com.codeit.findex.service.SyncJobService;
@@ -16,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -35,6 +37,7 @@ public class BasicSyncJobService implements SyncJobService {
     private final IndexInfoRepository indexInfoRepository;
     private final SyncJobRepository syncJobRepository;
     private final SyncJobMapper syncJobMapper;
+    private final IndexDataRepository indexDataRepository;
 
     @Transactional
     @Override
@@ -98,7 +101,11 @@ public class BasicSyncJobService implements SyncJobService {
                             .build();
                 })
                 .toList();
+
+        indexDataRepository.saveAll(indexDataList);
     }
+
+
 
     /** OpenApi에서 받아온 데이터로 Index_infos 값에 매핑 후 DB에 저장 */
     public void createIndexInfos() {
