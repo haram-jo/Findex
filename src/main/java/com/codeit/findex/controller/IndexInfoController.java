@@ -62,11 +62,11 @@ public class IndexInfoController {
       @RequestParam(required = false) String indexClassification,
       @RequestParam(required = false) String indexName,
       @RequestParam(required = false) Boolean favorite,
-      @RequestParam(required = false) Long idAfter, //이전 페이지 마지막 요소 ID (예: id =10까지 봤으니, 그 다음 보려면 idAfter=10)
-      @RequestParam(required = false) String cursor, // 다음 페이지 조회를 위해 사용하는 값 (응답에서 받은 nextCursor 그대로 전달)
+      @RequestParam(required = false) Long idAfter, // 예: id =10까지 봤으니, 그 다음 보려면 idAfter=10
+      @RequestParam(required = false) String cursor, // 다음 페이지 조회를 위해 사용하는 값
       @RequestParam(required = false, defaultValue = "indexClassification") String sortField,
       @RequestParam(required = false, defaultValue = "asc") String sortDirection, // 오름차순
-      @RequestParam(required = false, defaultValue = "10") Integer size // 한 페이지 기본 값
+      @RequestParam(required = false, defaultValue = "10") Integer size
   ) {
     return indexInfoService.getIndexInfoList(
         indexClassification, indexName, favorite,
