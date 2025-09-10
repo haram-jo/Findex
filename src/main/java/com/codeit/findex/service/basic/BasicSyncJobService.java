@@ -2,11 +2,10 @@ package com.codeit.findex.service.basic;
 
 import com.codeit.findex.dto.data.CursorPageResponseSyncJobDto;
 import com.codeit.findex.dto.data.SyncJobDto;
+import com.codeit.findex.dto.request.IndexDataSyncRequest;
 import com.codeit.findex.dto.response.MarketIndexApiResponse;
-import com.codeit.findex.entity.IndexInfo;
-import com.codeit.findex.entity.JobType;
-import com.codeit.findex.entity.SourceType;
-import com.codeit.findex.entity.SyncJob;
+import com.codeit.findex.entity.*;
+import com.codeit.findex.mapper.SyncJobMapper;
 import com.codeit.findex.repository.IndexInfoRepository;
 import com.codeit.findex.repository.SyncJobRepository;
 import com.codeit.findex.service.SyncJobService;
@@ -23,6 +22,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -34,10 +34,11 @@ public class BasicSyncJobService implements SyncJobService {
     private final WebClient financeWebClient;
     private final IndexInfoRepository indexInfoRepository;
     private final SyncJobRepository syncJobRepository;
+    private final SyncJobMapper syncJobMapper;
 
     @Transactional
     @Override
-    public void createSyncJob(String workerId) {
+    public List<SyncJobDto> createSyncJob(String workerId) {
         // 1. 지수 정보 DB에 저장
         createIndexInfos();
 
@@ -53,8 +54,50 @@ public class BasicSyncJobService implements SyncJobService {
                             .build();
                 }).toList();
 
-        syncJobRepository.saveAll(syncJobList);
+        return syncJobRepository.saveAll(syncJobList).stream()
+                .map(syncJobMapper::toDto).toList();
+    }
 
+    @Override
+    public void createSyncIndexData(IndexDataSyncRequest request) {
+
+        String beginDate = request.baseDateFrom().replace("-", "");
+        String endDate = request.baseDateTo().replace("-", "");
+
+        List<IndexInfo> indexInfoList = indexInfoRepository.findAllById(request.indexInfoIds());
+
+        if (indexInfoList.size() != request.indexInfoIds().size()) {
+            throw new IllegalArgumentException("존재하지 않는 지수정보가 포함되어 있습니다.");
+        }
+
+        Set<String> indexNames = indexInfoList.stream().map(IndexInfo::getIndexName).collect(Collectors.toSet());
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+        List<IndexData> indexDataList = getFromOpenApiByBaseDate(beginDate, endDate).getResponse().getBody().getItems().getItem().stream()
+                .filter(item -> indexNames.contains(item.getIndexName()))
+                .map(item -> {
+                    IndexInfo matchedInfo = indexInfoList.stream()
+                            .filter(info -> info.getIndexName().equals(item.getIndexName()))
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalArgumentException("IndexInfo not found for " + item.getIndexName()));
+
+                    return IndexData.builder()
+                            .indexInfo(matchedInfo)   // 여기 넣기
+                            .baseDate(LocalDate.parse(item.getBaseDate(), formatter))
+                            .sourceType(SourceType.OPEN_API)
+                            .marketPrice(item.getMarketPrice())
+                            .closingPrice(item.getClosingPrice())
+                            .highPrice(item.getHighPrice())
+                            .lowPrice(item.getLowPrice())
+                            .versus(item.getVersus())
+                            .fluctuationRate(item.getFluctuationRate())
+                            .tradingPrice(item.getTradingPrice())
+                            .tradingQuantity(item.getTradingQuantity())
+                            .marketTotalAmount(item.getMarketTotalAmount())
+                            .build();
+                })
+                .toList();
     }
 
     /** OpenApi에서 받아온 데이터로 Index_infos 값에 매핑 후 DB에 저장 */
@@ -67,7 +110,7 @@ public class BasicSyncJobService implements SyncJobService {
         // 1. OpenAPI 호출
         while (true) {
             // 데이터 1000개
-            List<IndexInfo> newIndexInfoList = getOpenApiData(pageNo, pageSize).getResponse().getBody().getItems().getItem().stream()
+            List<IndexInfo> newIndexInfoList = getFromOpenApiByPage(pageNo, pageSize).getResponse().getBody().getItems().getItem().stream()
                     .filter(item -> seen.add(item.getIndexClassification() + ":" + item.getIndexName())) // 지수분류명 + 지수명으로 중복 제거
                     // DB에 이미 존재하는 지수 정보는 제외
                     .filter(item -> !indexInfoRepository.existsByIndexClassificationAndIndexName(
@@ -98,11 +141,11 @@ public class BasicSyncJobService implements SyncJobService {
 
     @Override
     public MarketIndexApiResponse findAll() {
-        MarketIndexApiResponse response = getOpenApiData(1, 100);
+        MarketIndexApiResponse response = getFromOpenApiByPage(1, 100);
         return response;
     }
 
-    public MarketIndexApiResponse getOpenApiData(int pageNo, int numOfRows) {
+    public MarketIndexApiResponse getFromOpenApiByPage(int pageNo, int numOfRows) {
         return financeWebClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/getStockMarketIndex")
@@ -110,6 +153,27 @@ public class BasicSyncJobService implements SyncJobService {
                         .queryParam("resultType", "json")
                         .queryParam("pageNo", pageNo)
                         .queryParam("numOfRows", numOfRows)
+                        .build())
+                .accept(MediaType.ALL)
+                .retrieve()
+                .bodyToMono(MarketIndexApiResponse.class)
+                .block();
+    }
+
+    public MarketIndexApiResponse getFromOpenApiByBaseDate(String beginDate, String endDate) {
+
+        if(beginDate == null || beginDate.length() != 8) throw new IllegalArgumentException("잘못된 날짜 정보입니다.");
+        if(endDate == null || endDate.length() != 8) throw new IllegalArgumentException("잘못된 날짜 정보입니다.");
+
+        return financeWebClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/getStockMarketIndex")
+                        .queryParam("serviceKey", serviceKey)
+                        .queryParam("resultType", "json")
+                        .queryParam("pageNo", 1)
+                        .queryParam("numOfRows", 500)
+                        .queryParam("beginBasDt", beginDate)
+                        .queryParam("endBasDt", endDate)
                         .build())
                 .accept(MediaType.ALL)
                 .retrieve()
