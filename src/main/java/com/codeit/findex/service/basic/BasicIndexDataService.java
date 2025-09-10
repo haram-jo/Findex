@@ -1,7 +1,9 @@
 package com.codeit.findex.service.basic;
 
+import com.codeit.findex.dto.data.CursorPageResponseIndexDataDto;
 import com.codeit.findex.dto.data.IndexDataDto;
 import com.codeit.findex.dto.request.IndexDataCreateRequest;
+import com.codeit.findex.dto.request.IndexDataSearchCondition;
 import com.codeit.findex.dto.request.IndexDataUpdateRequest;
 import com.codeit.findex.entity.IndexData;
 import com.codeit.findex.entity.IndexInfo;
@@ -11,6 +13,9 @@ import com.codeit.findex.repository.IndexDataRepository;
 import com.codeit.findex.repository.IndexInfoRepository;
 import com.codeit.findex.service.IndexDataService;
 import jakarta.persistence.EntityNotFoundException;
+
+import java.util.Base64;
+import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +33,10 @@ public class BasicIndexDataService implements IndexDataService {
     @Override
     @Transactional
     public IndexDataDto createIndexData(IndexDataCreateRequest request) {
+        if (indexDataRepository.existsByIndexInfoIdAndBaseDate(request.indexInfoId(), request.baseDate())) {
+            throw new IllegalArgumentException("이미 해당 날짜에 등록된 지수 데이터가 존재합니다.");
+        }
+
         IndexInfo indexInfo = indexInfoRepository.findById(request.indexInfoId())
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 지수 정보를 찾을 수 없습니다: " + request.indexInfoId()));
 
@@ -70,6 +79,38 @@ public class BasicIndexDataService implements IndexDataService {
             throw new EntityNotFoundException("해당 ID의 주가 데이터를 찾을 수 없습니다: " + id);
         }
         indexDataRepository.deleteById(id);
+    }
+
+    @Override
+    public CursorPageResponseIndexDataDto searchIndexData(IndexDataSearchCondition condition) {
+        List<IndexData> results = indexDataRepository.search(condition);
+        long totalElements = indexDataRepository.count(condition);
+
+        boolean hasNext = results.size() > condition.size();
+        if (hasNext) {
+            results.remove(results.size() - 1);
+        }
+
+        List<IndexDataDto> content = indexDataMapper.toDtoList(results);
+
+        String nextCursor = null;
+        Long nextIdAfter = null;
+
+        if (hasNext) {
+            IndexData lastItem = results.get(results.size() - 1);
+            String cursorJson = String.format("{\"id\":%d}", lastItem.getId());
+            nextCursor = Base64.getEncoder().encodeToString(cursorJson.getBytes());
+            nextIdAfter = lastItem.getId();
+        }
+
+        return new CursorPageResponseIndexDataDto(
+                content,
+                nextCursor,
+                nextIdAfter,
+                condition.size(),
+                totalElements,
+                hasNext
+        );
     }
 
     private boolean isUpdateNeeded(IndexDataUpdateRequest request, IndexData indexData) {

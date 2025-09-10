@@ -1,15 +1,15 @@
 package com.codeit.findex.repository;
 
 import com.codeit.findex.entity.IndexData;
+import com.codeit.findex.repository.custom.IndexDataRepositoryCustom;
 import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-public interface IndexDataRepository extends JpaRepository<IndexData, Long>{
+public interface IndexDataRepository extends JpaRepository<IndexData, Long>, IndexDataRepositoryCustom {
 
-    // 데이터 등록 시 중복 체크
     boolean existsByIndexInfoIdAndBaseDate(Long indexInfoId, LocalDate baseDate);
 
     /**
