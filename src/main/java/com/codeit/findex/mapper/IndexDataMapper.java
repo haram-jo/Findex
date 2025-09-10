@@ -12,8 +12,8 @@ import org.mapstruct.MappingConstants;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface IndexDataMapper {
 
-  @Mapping(target = "sourceType", ignore = true)
-  IndexData toEntity(IndexDataCreateRequest request, IndexInfo indexInfo);
+  @Mapping(target = "sourceType", source = "sourceType")
+  IndexData toEntity(IndexDataCreateRequest request, IndexInfo indexInfo, String sourceType);
 
   @Mapping(source = "indexInfo.id", target = "indexInfoId")
   IndexDataDto toDto(IndexData entity);
