@@ -54,7 +54,7 @@ public class BasicIndexInfoService implements IndexInfoService {
     // 4. DTO 변환해서 반환
     return indexInfoMapper.toDto(updated);
    }
-   
+
    //삭제
   @Override
   @Transactional //여러 필드 중 하나라도 없으면 rollback
@@ -62,5 +62,14 @@ public class BasicIndexInfoService implements IndexInfoService {
     IndexInfo indexInfo = indexInfoRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("지수 정보 찾을 수 없음"));
     indexInfoRepository.delete(indexInfo);
+  }
+
+
+  //단건 조회
+  @Override
+  public IndexInfoDto getIndexInfo(Long id) {
+    IndexInfo indexInfo = indexInfoRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("지수 정보를 찾을 수 없음"));
+    return indexInfoMapper.toDto(indexInfo);
   }
 }
