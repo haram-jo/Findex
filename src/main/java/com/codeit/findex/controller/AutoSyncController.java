@@ -36,11 +36,11 @@ public class AutoSyncController {
             @RequestBody AutoSyncConfigUpdateRequest request
     ) {
         try {
-            if (request == null || request.getEnabled() == null) {
+            if (request == null || request.enabled() == null) {
                 throw new IllegalArgumentException("`enabled` must not be null.");
             }
 
-            AutoSyncConfigDto dto = autoSyncService.updateEnabled(id, request.getEnabled());
+            AutoSyncConfigDto dto = autoSyncService.updateEnabled(id, request.enabled());
             return ResponseEntity.ok(dto);
 
         } catch (IllegalArgumentException e) {
