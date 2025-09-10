@@ -57,27 +57,63 @@ public class BasicSyncJobService implements SyncJobService {
                             .build();
                 }).toList();
 
+        List<SyncJob> created = syncJobRepository.saveAll(syncJobList);
+
+        return created.stream().map(syncJobMapper::toDto).toList();
+    }
+
+    @Transactional
+    public List<SyncJobDto> createIndexDataSyncJob(String workerId, IndexDataSyncRequest request) {
+        // 1. 지수 데이터 DB에 저장
+        createIndexData(request);
+
+        // 2. 지수 정보(지수분류명)에 해당하는 지수 데이터 조회
+        List<SyncJob> syncJobList = indexDataRepository.findByIndexInfoIds(request.indexInfoIds()).stream()
+                .map(indexData -> {
+                    return  SyncJob.builder()
+                            .indexInfo(indexData.getIndexInfo())
+                            .jobType(JobType.INDEX_DATA)
+                            .jobTime(Instant.now())
+                            .targetDate(LocalDate.now())
+                            .worker(workerId)
+                            .result(true)
+                            .build();
+                }).toList();
+
         return syncJobRepository.saveAll(syncJobList).stream()
                 .map(syncJobMapper::toDto).toList();
     }
 
     @Override
-    public void createSyncIndexData(IndexDataSyncRequest request) {
+    public MarketIndexApiResponse findAll() {
+        MarketIndexApiResponse response = getFromOpenApiByPage(1, 100);
+        return response;
+    }
 
+    /** OpenApi에서 받아온 데이터를 Index_Data DB에 저장 */
+
+    public void createIndexData(IndexDataSyncRequest request) {
+
+        // 1. request에서 준 날짜 형식 변환(검색용)
         String beginDate = request.baseDateFrom().replace("-", "");
         String endDate = request.baseDateTo().replace("-", "");
 
+        // 2. DB에서 아이디에 해당하는 지수정보 조회
         List<IndexInfo> indexInfoList = indexInfoRepository.findAllById(request.indexInfoIds());
 
+        // 3. 지수 정보가 올바르게 가져와졌는지 검증
         if (indexInfoList.size() != request.indexInfoIds().size()) {
             throw new IllegalArgumentException("존재하지 않는 지수정보가 포함되어 있습니다.");
         }
 
+        // 4.지수 정보에서 이름 추출하고 리스트에 담기(Set 으로 중복 검증)
         Set<String> indexNames = indexInfoList.stream().map(IndexInfo::getIndexName).collect(Collectors.toSet());
 
+        // 5. OpenApi에서 가져온 baseDate를 LocalDate로 변환
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
         List<IndexData> indexDataList = getFromOpenApiByBaseDate(beginDate, endDate).getResponse().getBody().getItems().getItem().stream()
+                // 지수 이름으로 필터링
                 .filter(item -> indexNames.contains(item.getIndexName()))
                 .map(item -> {
                     IndexInfo matchedInfo = indexInfoList.stream()
@@ -102,6 +138,7 @@ public class BasicSyncJobService implements SyncJobService {
                 })
                 .toList();
 
+        // 데이터 저장
         indexDataRepository.saveAll(indexDataList);
     }
 
@@ -146,11 +183,6 @@ public class BasicSyncJobService implements SyncJobService {
     }
 
 
-    @Override
-    public MarketIndexApiResponse findAll() {
-        MarketIndexApiResponse response = getFromOpenApiByPage(1, 100);
-        return response;
-    }
 
     public MarketIndexApiResponse getFromOpenApiByPage(int pageNo, int numOfRows) {
         return financeWebClient.get()

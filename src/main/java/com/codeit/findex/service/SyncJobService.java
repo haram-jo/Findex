@@ -11,7 +11,8 @@ public interface SyncJobService {
 
     List<SyncJobDto> createSyncJob(String workerId);
 
+    List<SyncJobDto> createIndexDataSyncJob(String workerId, IndexDataSyncRequest request);
+
     MarketIndexApiResponse findAll();
 
-    void createSyncIndexData(IndexDataSyncRequest request);
 }

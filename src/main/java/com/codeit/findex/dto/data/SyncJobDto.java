@@ -1,10 +1,18 @@
 package com.codeit.findex.dto.data;
 
+import com.codeit.findex.entity.JobType;
+import lombok.Builder;
+
+import java.time.Instant;
+import java.time.LocalDate;
+
+@Builder
 public record SyncJobDto(
-        Integer id,
-        String jobType,
-        Integer indexInfoId,
+        Long id,
+        JobType jobType,
+        Long indexInfoId,
+        LocalDate targetDate,
         String worker,
-        String jobTime,
+        Instant jobTime,
         String result
 ) {}

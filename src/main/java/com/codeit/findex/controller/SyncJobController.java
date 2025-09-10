@@ -27,9 +27,12 @@ public class SyncJobController {
     }
 
     @PostMapping("/index-data")
-    public ResponseEntity<String> createSyncIndexData(@Valid @RequestBody IndexDataSyncRequest request) {
-        syncJobService.createSyncIndexData(request);
-        return ResponseEntity.ok("success");
+    public ResponseEntity<List<SyncJobDto>> createSyncIndexData(
+            HttpServletRequest request,
+            @Valid @RequestBody IndexDataSyncRequest syncData) {
+        String workerId = request.getRemoteAddr();
+        List<SyncJobDto> response = syncJobService.createIndexDataSyncJob(workerId, syncData);
+        return ResponseEntity.ok(response);
     }
 
 
