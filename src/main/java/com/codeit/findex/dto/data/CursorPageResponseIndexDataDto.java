@@ -4,10 +4,10 @@ import java.util.List;
 
 public record CursorPageResponseIndexDataDto(
         List<IndexDataDto> content,
-        Long nextCursor,
+        String nextCursor,
         String nextIdAfter,
-        int size,
-        long totalElements,
+        Integer size,
+        Long totalElements,
         boolean hasNext
 ) {
 }

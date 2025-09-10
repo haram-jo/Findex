@@ -1,8 +1,18 @@
 package com.codeit.findex.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,8 +34,9 @@ public class IndexData {
     @Column(name = "base_date", nullable = false)
     private LocalDate baseDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "source_type", length = 100)
-    private String sourceType;
+    private SourceType sourceType;
 
     @Column(name = "market_price", precision = 20, scale = 4)
     private BigDecimal marketPrice; // 시가
@@ -56,7 +67,7 @@ public class IndexData {
 
 
     @Builder
-    public IndexData(IndexInfo indexInfo, LocalDate baseDate, String sourceType, BigDecimal marketPrice,
+    public IndexData(IndexInfo indexInfo, LocalDate baseDate, SourceType sourceType, BigDecimal marketPrice,
                      BigDecimal closingPrice, BigDecimal highPrice, BigDecimal lowPrice, BigDecimal versus,
                      BigDecimal fluctuationRate, Long tradingQuantity, Long tradingPrice, Long marketTotalAmount) {
         this.indexInfo = indexInfo;

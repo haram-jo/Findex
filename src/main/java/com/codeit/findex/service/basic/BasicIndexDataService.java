@@ -31,7 +31,7 @@ public class BasicIndexDataService implements IndexDataService {
         IndexInfo indexInfo = indexInfoRepository.findById(request.indexInfoId())
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 지수 정보를 찾을 수 없습니다: " + request.indexInfoId()));
 
-        IndexData indexData = indexDataMapper.toEntity(request, indexInfo, SourceType.USER.name());
+        IndexData indexData = indexDataMapper.toEntity(request, indexInfo, SourceType.USER);
 
         IndexData savedIndexData = indexDataRepository.save(indexData);
 
