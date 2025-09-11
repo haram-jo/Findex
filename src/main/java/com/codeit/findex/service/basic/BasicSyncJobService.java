@@ -18,14 +18,10 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -122,6 +118,9 @@ public class BasicSyncJobService implements SyncJobService {
     /** OpenApi에서 받아온 데이터를 Index_Data DB에 저장 */
     public void createIndexData(IndexDataSyncRequest request) {
 
+        int pageNo = 1;
+        int pageSize = 999;
+
         // 1. request에서 준 날짜 형식 변환(검색용)
         String beginDate = request.baseDateFrom().replace("-", "");
         String endDate = request.baseDateTo().replace("-", "");
@@ -134,46 +133,57 @@ public class BasicSyncJobService implements SyncJobService {
             throw new IllegalArgumentException("존재하지 않는 지수정보가 포함되어 있습니다.");
         }
 
-        // 4.지수 정보에서 이름 추출하고 리스트에 담기(Set 으로 중복 검증)
-        Set<String> indexNames = indexInfoList.stream().map(IndexInfo::getIndexName).collect(Collectors.toSet());
+        // key: 분류명 - value: 지수명
+        Map<String, String> indexInfoMap = indexInfoList.stream().collect(Collectors.toMap(
+                IndexInfo::getIndexClassification,         // key 매퍼
+                IndexInfo::getIndexName   // value 매퍼
+        ));
 
         // 5. OpenApi에서 가져온 baseDate를 LocalDate로 변환
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-        List<IndexData> indexDataList = getFromOpenApiByBaseDate(beginDate, endDate).getResponse().getBody().getItems().getItem().stream()
-                // 지수 이름으로 필터링
-                .filter(item -> indexNames.contains(item.getIndexName()))
-                .map(item -> {
-                    IndexInfo matchedInfo = indexInfoList.stream()
-                            .filter(info -> info.getIndexName().equals(item.getIndexName()))
-                            .findFirst()
-                            .orElseThrow(() -> new IllegalArgumentException("IndexInfo not found for " + item.getIndexName()));
+        // OpenApi 호출
+        while (true) {
+            List<IndexData> indexDataList = getFromOpenApiByBaseDate(pageNo, pageSize, beginDate, endDate).getResponse().getBody().getItems().getItem().stream()
+                    // 지수 분류명으로 필터링
+                    .filter(item -> indexInfoMap.containsKey(item.getIndexClassification()))
+                    // 지수 이름으로 필터링
+                    .filter(item -> indexInfoMap.containsValue(item.getIndexName()))
+                    .map(item -> {
+                        IndexInfo matchedInfo = indexInfoList.stream()
+                                .filter(info -> info.getIndexName().equals(item.getIndexName()))
+                                .findFirst()
+                                .orElseThrow(() -> new IllegalArgumentException("IndexInfo not found for " + item.getIndexName()));
 
-                    return IndexData.builder()
-                            .indexInfo(matchedInfo)   // 여기 넣기
-                            .baseDate(LocalDate.parse(item.getBaseDate(), formatter))
-                            .sourceType(SourceType.OPEN_API)
-                            .marketPrice(item.getMarketPrice())
-                            .closingPrice(item.getClosingPrice())
-                            .highPrice(item.getHighPrice())
-                            .lowPrice(item.getLowPrice())
-                            .versus(item.getVersus())
-                            .fluctuationRate(item.getFluctuationRate())
-                            .tradingPrice(item.getTradingPrice())
-                            .tradingQuantity(item.getTradingQuantity())
-                            .marketTotalAmount(item.getMarketTotalAmount())
-                            .build();
-                })
-                .toList();
+                        return IndexData.builder()
+                                .indexInfo(matchedInfo)   // 여기 넣기
+                                .baseDate(LocalDate.parse(item.getBaseDate(), formatter))
+                                .sourceType(SourceType.OPEN_API)
+                                .marketPrice(item.getMarketPrice())
+                                .closingPrice(item.getClosingPrice())
+                                .highPrice(item.getHighPrice())
+                                .lowPrice(item.getLowPrice())
+                                .versus(item.getVersus())
+                                .fluctuationRate(item.getFluctuationRate())
+                                .tradingPrice(item.getTradingPrice())
+                                .tradingQuantity(item.getTradingQuantity())
+                                .marketTotalAmount(item.getMarketTotalAmount())
+                                .build();
+                    })
+                    .toList();
 
-        // 데이터 저장
-        indexDataRepository.saveAll(indexDataList);
+            // 데이터 저장
+            indexDataRepository.saveAll(indexDataList);
+
+            pageNo++;
+            if(indexDataList.isEmpty())  break;
+        }
     }
 
     /** OpenApi에서 받아온 데이터로 Index_infos 값에 매핑 후 DB에 저장 */
     public void createIndexInfos() {
         int pageNo = 1;
-        int pageSize = 100;
+        int pageSize = 999;
 
         Set<String> seen = new HashSet<>();
 
@@ -203,8 +213,7 @@ public class BasicSyncJobService implements SyncJobService {
             indexInfoRepository.saveAll(newIndexInfoList);
 
             pageNo++;
-            //if(itemList.isEmpty())  break;
-            if(pageNo == 5) break;
+            if(newIndexInfoList.isEmpty())  break;
         }
     }
 
@@ -223,7 +232,7 @@ public class BasicSyncJobService implements SyncJobService {
                 .block();
     }
 
-    public MarketIndexApiResponse getFromOpenApiByBaseDate(String beginDate, String endDate) {
+    public MarketIndexApiResponse getFromOpenApiByBaseDate(int pageNo, int numOfRows, String beginDate, String endDate) {
 
         if(beginDate == null || beginDate.length() != 8) throw new IllegalArgumentException("잘못된 날짜 정보입니다.");
         if(endDate == null || endDate.length() != 8) throw new IllegalArgumentException("잘못된 날짜 정보입니다.");
@@ -233,8 +242,8 @@ public class BasicSyncJobService implements SyncJobService {
                         .path("/getStockMarketIndex")
                         .queryParam("serviceKey", serviceKey)
                         .queryParam("resultType", "json")
-                        .queryParam("pageNo", 1)
-                        .queryParam("numOfRows", 500)
+                        .queryParam("pageNo", pageNo)
+                        .queryParam("numOfRows", numOfRows)
                         .queryParam("beginBasDt", beginDate)
                         .queryParam("endBasDt", endDate)
                         .build())
