@@ -25,8 +25,8 @@ public class AutoSyncController {
             @RequestParam(defaultValue = "asc") String sortDirection,
             @RequestParam(defaultValue = "10") Integer size
     ) {
-        var res = autoSyncService.list(indexInfoId, enabled, idAfter, cursor, sortField, sortDirection, size);
-        return ResponseEntity.ok(res);
+        CursorPageResponseAutoSyncConfigDto response = autoSyncService.list(indexInfoId, enabled, idAfter, cursor, sortField, sortDirection, size);
+        return ResponseEntity.ok(response);
     }
 
     // ====== PATCH: enabled 수정 ======
@@ -40,8 +40,8 @@ public class AutoSyncController {
                 throw new IllegalArgumentException("`enabled` must not be null.");
             }
 
-            AutoSyncConfigDto dto = autoSyncService.updateEnabled(id, request.enabled());
-            return ResponseEntity.ok(dto);
+            AutoSyncConfigDto response = autoSyncService.updateEnabled(id, request.enabled());
+            return ResponseEntity.ok(response);
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
