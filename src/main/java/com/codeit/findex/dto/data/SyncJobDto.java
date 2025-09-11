@@ -1,6 +1,7 @@
 package com.codeit.findex.dto.data;
 
 import com.codeit.findex.entity.JobType;
+import com.codeit.findex.entity.ResultType;
 import com.codeit.findex.service.basic.BasicSyncJobService;
 import lombok.Builder;
 
@@ -15,5 +16,5 @@ public record SyncJobDto(
         LocalDate targetDate,
         String worker,
         Instant jobTime,
-        BasicSyncJobService.ResultType result
+        ResultType result
 ) {}

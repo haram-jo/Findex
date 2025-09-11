@@ -1,6 +1,5 @@
 package com.codeit.findex.entity;
 
-import com.codeit.findex.service.basic.BasicSyncJobService;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,6 +19,10 @@ public class SyncJob {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "index_info_id", nullable = false)
+    private  IndexInfo indexInfo;
+
     @Enumerated(EnumType.STRING)
     private JobType jobType;
 
@@ -29,10 +32,10 @@ public class SyncJob {
 
     private Instant jobTime;
 
-    private BasicSyncJobService.ResultType result;
+    private Boolean result;
 
-    @ManyToOne
-    @JoinColumn(name = "index_info_id", nullable = false)
-    private  IndexInfo indexInfo;
+    public void setResult(ResultType resultType) {
+        this.result = resultType.toBoolean();
+    }
 
 }

@@ -13,6 +13,8 @@ import lombok.Getter;
 import lombok.Setter;
 import jakarta.persistence.GenerationType;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "index_infos")
 @Getter
@@ -29,7 +31,7 @@ public class IndexInfo {
   private String indexName;           // 지수명
   private Integer employedItemsCount; // 채용종목수
 
-  private String basePointInTime;     // 기준 시점(YYYY-MM-DD)
+  private LocalDate basePointInTime;     // 기준 시점(YYYY-MM-DD)
   private Double baseIndex;           // 기준 지수
 
   @Enumerated(EnumType.STRING)
@@ -44,7 +46,7 @@ public class IndexInfo {
   public void setEmployedItemsCount(Integer employedItemsCount) {
     this.employedItemsCount = employedItemsCount;
   }
-  public void setBasePointInTime(String basePointInTime) {
+  public void setBasePointInTime(LocalDate basePointInTime) {
     this.basePointInTime = basePointInTime;
   }
   public void setBaseIndex(Double baseIndex) {

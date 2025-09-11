@@ -14,6 +14,7 @@ import com.codeit.findex.service.SyncJobService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -51,7 +52,7 @@ public class BasicSyncJobService implements SyncJobService {
                             .jobTime(Instant.now()) // 작업 일시
                             .targetDate(LocalDate.now()) // 연동한 날짜(대상 날짜)
                             .worker(workerId)
-                            .result(ResultType.SUCCESS)
+                            .result(ResultType.SUCCESS.toBoolean())
                             .build();
                 }).toList();
 
@@ -74,7 +75,7 @@ public class BasicSyncJobService implements SyncJobService {
                             .jobTime(Instant.now())
                             .targetDate(LocalDate.now())
                             .worker(workerId)
-                            .result(ResultType.SUCCESS)
+                            .result(ResultType.SUCCESS.toBoolean())
                             .build();
                 }).toList();
 
@@ -187,6 +188,9 @@ public class BasicSyncJobService implements SyncJobService {
 
         Set<String> seen = new HashSet<>();
 
+        // 5. OpenApi에서 가져온 baseDate를 LocalDate로 변환
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+
         // 1. OpenAPI 호출
         while (true) {
             // 데이터 1000개
@@ -201,7 +205,7 @@ public class BasicSyncJobService implements SyncJobService {
                             .indexClassification(item.getIndexClassification()) // 지수 분류 명
                             .indexName(item.getIndexName()) // 지수명
                             .employedItemsCount(Integer.valueOf(item.getEmployedItemsCount())) //채용 종목 수
-                            .basePointInTime(item.getBasePointInTime())
+                            .basePointInTime (LocalDate.parse(item.getBasePointInTime(), formatter))
                             .baseIndex(Double.valueOf(item.getBaseIndex()))
                             .sourceType(SourceType.OPEN_API)
                             .favorite(false)
@@ -210,7 +214,12 @@ public class BasicSyncJobService implements SyncJobService {
                     .toList();
 
             // 중복이 제거된 가져온 새로운 지수 정보들 DB에 저장
-            indexInfoRepository.saveAll(newIndexInfoList);
+            try {
+                indexInfoRepository.saveAll(newIndexInfoList);
+            } catch (DataIntegrityViolationException e) {
+                System.out.println(e.getMessage());
+            }
+
 
             pageNo++;
             if(newIndexInfoList.isEmpty())  break;
@@ -251,10 +260,5 @@ public class BasicSyncJobService implements SyncJobService {
                 .retrieve()
                 .bodyToMono(MarketIndexApiResponse.class)
                 .block();
-    }
-
-    public enum ResultType {
-        SUCCESS,
-        FAILED
     }
 }
