@@ -3,6 +3,7 @@ package com.codeit.findex.repository;
 import com.codeit.findex.entity.AutoSync;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -12,6 +13,11 @@ public interface AutoSyncRepository extends JpaRepository<AutoSync, Long> {
     @Override
     @EntityGraph(attributePaths = "indexInfoId")
     List<AutoSync> findAll();
+
+    // AutoSync.indexInfoId 는 IndexInfo 타입 필드이므로 .id 로 접근 // Schedular를 위한 추가
+    @Query("select a.indexInfoId.id from AutoSync a where a.enabled = true")
+    List<Long> findEnabledIndexIds();
+
 
 //    // 지수 + 활성화
 //    @EntityGraph(attributePaths = "indexInfoId")
