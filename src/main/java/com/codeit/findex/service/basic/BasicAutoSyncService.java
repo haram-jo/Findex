@@ -8,6 +8,8 @@ import com.codeit.findex.mapper.AutoSyncMapper;
 import com.codeit.findex.repository.custom.AutoSyncRepositoryCustom;
 import com.codeit.findex.repository.AutoSyncRepository;
 import com.codeit.findex.service.AutoSyncService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;   // ★ EntityManager 주입
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,8 @@ public class BasicAutoSyncService implements AutoSyncService { // 서비스 구�
     private final AutoSyncRepositoryCustom autoSyncRepositoryCustom; // Slice + keyset 전용 커스텀 리포지토리
     private final AutoSyncMapper autoSyncMapper;         // 엔티티↔DTO 변환기
 
+    @PersistenceContext
+    private EntityManager em;                            // ★ 리드-리페어(백필) 네이티브 쿼리 실행용
     // ============PATCH=======================
     @Transactional
     @Override
@@ -38,7 +42,7 @@ public class BasicAutoSyncService implements AutoSyncService { // 서비스 구�
     }
 
     // ============목록조회=======================
-    @Transactional(readOnly = true)
+    @Transactional // ★ read-only 해제: 목록 조회 전에 멱등 백필 INSERT를 1회 수행하기 위함
     @Override
     public CursorPageResponseAutoSyncConfigDto list( // 목록 조회(리팩토링: Slice + keyset)
                                                      Long indexInfoId,                        // 지수 필터
@@ -49,6 +53,13 @@ public class BasicAutoSyncService implements AutoSyncService { // 서비스 구�
                                                      String sortDirection,                    // 정렬 방향
                                                      Integer size                             // 페이지 크기
     ) {
+        // ===== (1) 리드-리페어: index_infos 에 존재하지만 auto_sync 에 없는 행을 즉시 백필 =====
+        // - 멱등/경량 쿼리: 없는 것만 삽입
+        // - 실제 테이블/컬럼명은 DB 스키마에 맞게 사용 (여기선 snake_case 가정)
+        // - 운영 DB(PostgreSQL)에는 auto_sync.index_info_id 에 UNIQUE 제약이 걸려 있으면 더 안전
+        // ★ 변경: 필터에 맞춰 필요한 범위만 백필
+        backfillAutoSyncRowsIfMissing(indexInfoId);
+
         int pageSize = normalizeSize(size);          // 페이지 크기 정규화
         String safeSortField = normalizeSortField(sortField); // 화이트리스트 강제
         boolean asc = !"desc".equalsIgnoreCase(sortDirection); // 정렬 방향 판정
@@ -68,7 +79,7 @@ public class BasicAutoSyncService implements AutoSyncService { // 서비스 구�
         List<AutoSync> rows = slice.getContent();                     // Slice 내용 추출
         boolean hasNext = slice.hasNext();                            // 다음 페이지 여부
 
-        List<com.codeit.findex.dto.data.AutoSyncConfigDto> content = autoSyncMapper.toDtoList(rows); // DTO 리스트 변환
+        List<AutoSyncConfigDto> content = autoSyncMapper.toDtoList(rows); // DTO 리스트 변환
 
         String nextCursor = null;                                     // 다음 커서(정렬값)
         Long nextIdAfter = null;                                      // 다음 시작점 ID
@@ -96,6 +107,36 @@ public class BasicAutoSyncService implements AutoSyncService { // 서비스 구�
                 total,                                                // 총 개수
                 hasNext                                               // 다음 페이지 존재 여부
         );
+    }
+    // ===== 리드-리페어(백필) 유틸 =====
+    /**
+     * index_infos 에는 존재하지만 auto_sync 에는 없는 지수에 대해,
+     * auto_sync 행을 enabled=false 로 멱등 삽입한다.
+     * - 성능: 단일 INSERT ... SELECT ... WHERE NOT EXISTS (경량)
+     * - 정합성: UNIQUE(index_info_id) 제약이 있으면 동시성에서도 안전
+     */
+    private void backfillAutoSyncRowsIfMissing(Long indexInfoId) {
+        if (indexInfoId == null) {
+            // 전체 백필 (기존 쿼리)
+            em.createNativeQuery(
+                    "INSERT INTO auto_sync (index_info_id, enabled) " +
+                            "SELECT i.id, FALSE " +
+                            "FROM index_infos i " +
+                            "WHERE NOT EXISTS ( " +
+                            "  SELECT 1 FROM auto_sync a WHERE a.index_info_id = i.id " +
+                            ")"
+            ).executeUpdate();
+        } else {
+            // 특정 지수만 백필 (필터가 있는 경우 효율 ↑)
+            em.createNativeQuery(
+                            "INSERT INTO auto_sync (index_info_id, enabled) " +
+                                    "SELECT :id, FALSE " +
+                                    "WHERE NOT EXISTS ( " +
+                                    "  SELECT 1 FROM auto_sync a WHERE a.index_info_id = :id " +
+                                    ")"
+                    ).setParameter("id", indexInfoId)
+                    .executeUpdate();
+        }
     }
 
     // ===== 유틸 – 정렬 필드/크기/커서 파싱/정렬값 추출 =====
