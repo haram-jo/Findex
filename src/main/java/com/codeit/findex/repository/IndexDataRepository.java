@@ -1,7 +1,7 @@
 package com.codeit.findex.repository;
 
 import com.codeit.findex.entity.IndexData;
-import com.codeit.findex.custom.IndexDataRepositoryCustom;
+import com.codeit.findex.repository.custom.IndexDataRepositoryCustom;
 import java.time.LocalDate;
 import java.util.List;
 

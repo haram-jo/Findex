@@ -1,4 +1,4 @@
-package com.codeit.findex.custom;
+package com.codeit.findex.repository.custom;
 import com.codeit.findex.entity.IndexInfo;
 import java.util.List;
 

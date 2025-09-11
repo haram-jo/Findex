@@ -1,6 +1,6 @@
 package com.codeit.findex.repository;
 
-import com.codeit.findex.custom.IndexInfoRepositoryCustom;
+import com.codeit.findex.repository.custom.IndexInfoRepositoryCustom;
 import com.codeit.findex.entity.IndexInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 
