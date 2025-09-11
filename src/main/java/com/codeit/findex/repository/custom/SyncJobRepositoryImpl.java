@@ -2,6 +2,7 @@ package com.codeit.findex.repository.custom;
 
 import com.codeit.findex.dto.request.SyncJobSearchRequest;
 import com.codeit.findex.entity.SyncJob;
+import com.codeit.findex.service.basic.BasicSyncJobService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
@@ -79,7 +80,7 @@ public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom {
             query.setParameter("jobTimeTo", param.jobTimeTo());
         }
         if (param.status() != null && !param.status().isBlank()) {
-            query.setParameter("status", param.status());
+            query.setParameter("status", BasicSyncJobService.ResultType.valueOf(param.status().toUpperCase()));
         }
         if (param.idAfter() != null) {
             query.setParameter("idAfter", param.idAfter());
@@ -95,9 +96,9 @@ public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom {
 
         StringBuilder jpqlBuilder = new StringBuilder("SELECT count(d) FROM SyncJob d WHERE 1=1");
 
-        if(param.indexInfoId() != null) jpqlBuilder.append(" AND s.indexInfo.id = :indexInfoId");
-        if(param.baseDateFrom() != null) jpqlBuilder.append(" AND s.targetDate >= :baseDateFrom");
-        if(param.baseDateTo() != null) jpqlBuilder.append(" AND s.targetDate <= :baseDateTo");
+        if(param.indexInfoId() != null) jpqlBuilder.append(" AND d.indexInfo.id = :indexInfoId");
+        if(param.baseDateFrom() != null) jpqlBuilder.append(" AND d.targetDate >= :baseDateFrom");
+        if(param.baseDateTo() != null) jpqlBuilder.append(" AND d.targetDate <= :baseDateTo");
 
         // 최종 쿼리
         TypedQuery<Long> query = em.createQuery(jpqlBuilder.toString(), Long.class);
