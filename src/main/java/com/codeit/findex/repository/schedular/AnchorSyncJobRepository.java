@@ -1,6 +1,5 @@
 package com.codeit.findex.repository.schedular;
 
-import com.codeit.findex.service.basic.BasicSyncJobService;
 import com.codeit.findex.entity.JobType;
 import com.codeit.findex.entity.SyncJob;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,7 +12,7 @@ public interface AnchorSyncJobRepository extends JpaRepository<SyncJob, Long> {
             Long indexInfoId,
             JobType jobType,
             String worker,
-            BasicSyncJobService.ResultType result
+            boolean result
     );
 }
 
