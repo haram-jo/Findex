@@ -3,8 +3,10 @@ package com.codeit.findex.service;
 
 import com.codeit.findex.dto.data.CursorPageResponseIndexInfoDto;
 import com.codeit.findex.dto.data.IndexInfoDto;
+import com.codeit.findex.dto.data.IndexInfoSummaryDto;
 import com.codeit.findex.dto.request.IndexInfoCreateRequest;
 import com.codeit.findex.dto.request.IndexInfoUpdateRequest;
+import java.util.List;
 
 public interface IndexInfoService {
 
@@ -31,4 +33,7 @@ public interface IndexInfoService {
       String sortDirection,
       Integer size
   );
+
+  //지수 요약 목록 조회
+  List<IndexInfoSummaryDto> getIndexInfoSummaries();
 }

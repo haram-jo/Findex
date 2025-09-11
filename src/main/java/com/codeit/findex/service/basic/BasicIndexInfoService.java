@@ -2,6 +2,7 @@ package com.codeit.findex.service.basic;
 
 import com.codeit.findex.dto.data.CursorPageResponseIndexInfoDto;
 import com.codeit.findex.dto.data.IndexInfoDto;
+import com.codeit.findex.dto.data.IndexInfoSummaryDto;
 import com.codeit.findex.dto.request.IndexInfoCreateRequest;
 import com.codeit.findex.dto.request.IndexInfoUpdateRequest;
 import com.codeit.findex.entity.IndexInfo;
@@ -129,5 +130,11 @@ public class BasicIndexInfoService implements IndexInfoService {
         hasNext         // 다음 페이지 여부
     );
    }
+
+   //요약 목록 조회
+  @Override
+  public List<IndexInfoSummaryDto> getIndexInfoSummaries() {
+    return indexInfoRepository.findAllSummaries();
+    }
   }
 
