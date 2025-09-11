@@ -10,6 +10,9 @@ import com.codeit.findex.mapper.IndexInfoMapper;
 import com.codeit.findex.repository.IndexInfoRepository;
 import com.codeit.findex.service.IndexInfoService;
 import jakarta.transaction.Transactional;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -42,11 +45,13 @@ public class BasicIndexInfoService implements IndexInfoService {
     IndexInfo indexInfo = indexInfoRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("지수 정보를 찾을 수 없음"));
 
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+
     // 2. 값 수정
     if (request.employedItemsCount() != null)
       indexInfo.setEmployedItemsCount(request.employedItemsCount());
     if (request.basePointInTime() != null)
-      indexInfo.setBasePointInTime(request.basePointInTime());
+      indexInfo.setBasePointInTime(LocalDate.parse(request.basePointInTime(), formatter));
     if (request.baseIndex() != null)
       indexInfo.setBaseIndex(request.baseIndex());
     if (request.favorite() != null)

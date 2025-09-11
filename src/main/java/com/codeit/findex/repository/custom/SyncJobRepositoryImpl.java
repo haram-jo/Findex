@@ -1,6 +1,7 @@
 package com.codeit.findex.repository.custom;
 
 import com.codeit.findex.dto.request.SyncJobSearchRequest;
+import com.codeit.findex.entity.ResultType;
 import com.codeit.findex.entity.SyncJob;
 import com.codeit.findex.service.basic.BasicSyncJobService;
 import jakarta.persistence.EntityManager;
@@ -80,7 +81,7 @@ public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom {
             query.setParameter("jobTimeTo", param.jobTimeTo());
         }
         if (param.status() != null && !param.status().isBlank()) {
-            query.setParameter("status", BasicSyncJobService.ResultType.valueOf(param.status().toUpperCase()));
+            query.setParameter("status", ResultType.valueOf(param.status().toUpperCase()).toBoolean());
         }
         if (param.idAfter() != null) {
             query.setParameter("idAfter", param.idAfter());
