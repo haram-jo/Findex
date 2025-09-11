@@ -1,5 +1,6 @@
 package com.codeit.findex.controller;
 
+import com.codeit.findex.dto.data.CursorPageResponseSyncJobDto;
 import com.codeit.findex.dto.data.SyncJobDto;
 import com.codeit.findex.dto.request.IndexDataSyncRequest;
 import com.codeit.findex.dto.request.SyncJobSearchRequest;
@@ -41,7 +42,7 @@ public class SyncJobController {
 
     // 연동 작업 목록 조회
     @GetMapping
-    public ResponseEntity<MarketIndexApiResponse> list(SyncJobSearchRequest param) {
+    public ResponseEntity<CursorPageResponseSyncJobDto> list(SyncJobSearchRequest param) {
         return ResponseEntity.ok(syncJobService.findAll(param));
     }
 }

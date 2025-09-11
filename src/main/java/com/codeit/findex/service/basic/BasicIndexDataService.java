@@ -14,10 +14,14 @@ import com.codeit.findex.repository.IndexInfoRepository;
 import com.codeit.findex.service.IndexDataService;
 import jakarta.persistence.EntityNotFoundException;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -123,5 +127,33 @@ public class BasicIndexDataService implements IndexDataService {
         if (request.tradingQuantity() != null && !indexData.getTradingQuantity().equals(request.tradingQuantity())) return true;
         if (request.tradingPrice() != null && !indexData.getTradingPrice().equals(request.tradingPrice())) return true;
         return request.marketTotalAmount() != null && !indexData.getMarketTotalAmount().equals(request.marketTotalAmount());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void exportIndexDataToCsv(Writer writer, IndexDataSearchCondition condition) {
+        List<IndexData> indexDataList = indexDataRepository.findAllByCondition(condition);
+        List<IndexDataDto> indexDataDtoList = indexDataMapper.toDtoList(indexDataList);
+
+        String[] headers = {"baseDate", "marketPrice", "closingPrice", "highPrice", "lowPrice", "versus", "fluctuationRate", "tradingQuantity", "tradingPrice", "marketTotalAmount"};
+
+        try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(headers))) {
+            for (IndexDataDto dto : indexDataDtoList) {
+                csvPrinter.printRecord(
+                        dto.baseDate(),
+                        dto.marketPrice(),
+                        dto.closingPrice(),
+                        dto.highPrice(),
+                        dto.lowPrice(),
+                        dto.versus(),
+                        dto.fluctuationRate(),
+                        dto.tradingQuantity(),
+                        dto.tradingPrice(),
+                        dto.marketTotalAmount()
+                );
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("CSV export failed", e);
+        }
     }
 }

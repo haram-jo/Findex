@@ -57,6 +57,9 @@ dependencies {
     //WebClientConfig 설정 추가
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
+    // Apache Commons CSV
+    implementation 'org.apache.commons:commons-csv:1.10.0'
+
 }
 
 tasks.named('test') {

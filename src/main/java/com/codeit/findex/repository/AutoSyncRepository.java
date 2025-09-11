@@ -13,15 +13,15 @@ public interface AutoSyncRepository extends JpaRepository<AutoSync, Long> {
     @EntityGraph(attributePaths = "indexInfoId")
     List<AutoSync> findAll();
 
-    // 지수 + 활성화
-    @EntityGraph(attributePaths = "indexInfoId")
-    List<AutoSync> findByIndexInfoId_IdAndEnabled(Long indexInfoId, boolean enabled);
-
-    // 지수만
-    @EntityGraph(attributePaths = "indexInfoId")
-    List<AutoSync> findByIndexInfoId_Id(Long indexInfoId);
-
-    // 활성화만
-    @EntityGraph(attributePaths = "indexInfoId")
-    List<AutoSync> findByEnabled(boolean enabled);
+//    // 지수 + 활성화
+//    @EntityGraph(attributePaths = "indexInfoId")
+//    List<AutoSync> findByIndexInfoId_IdAndEnabled(Long indexInfoId, boolean enabled);
+//
+//    // 지수만
+//    @EntityGraph(attributePaths = "indexInfoId")
+//    List<AutoSync> findByIndexInfoId_Id(Long indexInfoId);
+//
+//    // 활성화만
+//    @EntityGraph(attributePaths = "indexInfoId")
+//    List<AutoSync> findByEnabled(boolean enabled);
 }

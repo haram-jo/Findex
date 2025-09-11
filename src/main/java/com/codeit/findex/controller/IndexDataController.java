@@ -12,6 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/index-data")
@@ -47,5 +50,17 @@ public class IndexDataController {
             @Valid @RequestBody IndexDataUpdateRequest request) {
         IndexDataDto response = indexDataService.updateIndexData(id, request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/export/csv")
+    public void exportIndexDataToCsv(
+            HttpServletResponse response,
+            IndexDataSearchCondition condition
+    ) throws IOException {
+        response.setContentType("text/csv; charset=UTF-8");
+        String fileName = "index-data_" + java.time.LocalDate.now() + ".csv";
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+
+        indexDataService.exportIndexDataToCsv(response.getWriter(), condition);
     }
 }

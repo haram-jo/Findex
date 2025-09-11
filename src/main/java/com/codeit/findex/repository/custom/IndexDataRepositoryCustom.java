@@ -1,4 +1,5 @@
 package com.codeit.findex.repository.custom;
+
 import com.codeit.findex.dto.request.IndexDataSearchCondition;
 import com.codeit.findex.entity.IndexData;
 
@@ -9,5 +10,7 @@ public interface IndexDataRepositoryCustom {
     List<IndexData> search(IndexDataSearchCondition condition);
 
     long count(IndexDataSearchCondition condition);
+
+    List<IndexData> findAllByCondition(IndexDataSearchCondition condition);
 
 }

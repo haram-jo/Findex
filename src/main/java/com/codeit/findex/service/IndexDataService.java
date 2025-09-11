@@ -6,9 +6,12 @@ import com.codeit.findex.dto.request.IndexDataCreateRequest;
 import com.codeit.findex.dto.request.IndexDataSearchCondition;
 import com.codeit.findex.dto.request.IndexDataUpdateRequest;
 
+import java.io.Writer;
+
 public interface IndexDataService {
     IndexDataDto createIndexData(IndexDataCreateRequest request);
     void deleteIndexData(Long id);
     IndexDataDto updateIndexData(Long id, IndexDataUpdateRequest request);
     CursorPageResponseIndexDataDto searchIndexData(IndexDataSearchCondition condition);
+    void exportIndexDataToCsv(Writer writer, IndexDataSearchCondition condition);
 }
