@@ -1,5 +1,4 @@
-package com.codeit.findex.repository.custom;
-
+package com.codeit.findex.custom;
 import com.codeit.findex.dto.request.IndexDataSearchCondition;
 import com.codeit.findex.entity.IndexData;
 
