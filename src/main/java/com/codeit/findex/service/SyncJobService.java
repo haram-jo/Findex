@@ -17,6 +17,6 @@ public interface SyncJobService {
     List<SyncJobDto> createIndexDataSyncJob(String workerId, IndexDataSyncRequest request);
 
     // 연동 작업 목록 조회
-    MarketIndexApiResponse findAll(SyncJobSearchRequest request);
+    CursorPageResponseSyncJobDto findAll(SyncJobSearchRequest request);
 
 }

@@ -1,5 +1,6 @@
 package com.codeit.findex.entity;
 
+import com.codeit.findex.service.basic.BasicSyncJobService;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,7 +29,7 @@ public class SyncJob {
 
     private Instant jobTime;
 
-    private boolean result;
+    private BasicSyncJobService.ResultType result;
 
     @ManyToOne
     @JoinColumn(name = "index_info_id", nullable = false)
