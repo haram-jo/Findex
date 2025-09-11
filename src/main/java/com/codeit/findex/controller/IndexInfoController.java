@@ -3,9 +3,11 @@ package com.codeit.findex.controller;
 
 import com.codeit.findex.dto.data.CursorPageResponseIndexInfoDto;
 import com.codeit.findex.dto.data.IndexInfoDto;
+import com.codeit.findex.dto.data.IndexInfoSummaryDto;
 import com.codeit.findex.dto.request.IndexInfoCreateRequest;
 import com.codeit.findex.dto.request.IndexInfoUpdateRequest;
 import com.codeit.findex.service.IndexInfoService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -72,5 +74,11 @@ public class IndexInfoController {
         indexClassification, indexName, favorite,
         idAfter, cursor, sortField, sortDirection, size
     );
+  }
+
+  //지수 요약 목록 조회
+  @GetMapping("/summaries")
+  public ResponseEntity<List<IndexInfoSummaryDto>> getIndexInfoSummaries() {
+    return ResponseEntity.ok(indexInfoService.getIndexInfoSummaries());
   }
 }
