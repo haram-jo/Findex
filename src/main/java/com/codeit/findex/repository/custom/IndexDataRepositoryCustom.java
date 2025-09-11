@@ -11,4 +11,6 @@ public interface IndexDataRepositoryCustom {
 
     long count(IndexDataSearchCondition condition);
 
+    List<IndexData> findAllByCondition(IndexDataSearchCondition condition);
+
 }
