@@ -31,7 +31,7 @@ public class IndexInfoRepositoryImpl implements IndexInfoRepositoryCustom {
 
     // 2. 조건
     if (indexClassification != null) { //값이 null이 아니면
-      jpql.append("AND i.indexClassification = :indexClassification ");
+      jpql.append("AND i.indexClassification LIKE CONCAT('%', :indexClassification, '%') ");
     } // 쿼리에 그 값 추가
     if (indexName != null) { //값이 null이 아니면
       jpql.append("AND i.indexName LIKE CONCAT('%', :indexName, '%') ");
