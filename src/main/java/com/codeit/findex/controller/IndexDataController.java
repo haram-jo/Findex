@@ -5,6 +5,8 @@ import com.codeit.findex.dto.data.IndexDataDto;
 import com.codeit.findex.dto.request.IndexDataCreateRequest;
 import com.codeit.findex.dto.request.IndexDataSearchCondition;
 import com.codeit.findex.dto.request.IndexDataUpdateRequest;
+import com.codeit.findex.dto.response.MajorIndexDataResponse;
+import com.codeit.findex.service.DashBoardService;
 import com.codeit.findex.service.IndexDataService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,6 +24,7 @@ import java.io.IOException;
 public class IndexDataController {
 
     private final IndexDataService indexDataService;
+    private final DashBoardService dashBoardService;
 
     @GetMapping
     public ResponseEntity<CursorPageResponseIndexDataDto> searchIndexData(
@@ -62,5 +66,11 @@ public class IndexDataController {
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
 
         indexDataService.exportIndexDataToCsv(response.getWriter(), condition);
+    }
+
+    @GetMapping("/performance/favorite")
+    public ResponseEntity<List<MajorIndexDataResponse>> getMajorIndex(@RequestParam String periodType) {
+        List<MajorIndexDataResponse> response = dashBoardService.getMajorIndex(periodType);
+        return ResponseEntity.ok(response);
     }
 }
