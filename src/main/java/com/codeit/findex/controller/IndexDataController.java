@@ -74,9 +74,9 @@ public class IndexDataController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/performance/rank")
-    public ResponseEntity<String> getIndexDataRank(@RequestParam String periodType, @RequestParam int limit) {
+    // @GetMapping("/performance/rank")
+    // public ResponseEntity<String> getIndexDataRank(@RequestParam String periodType, @RequestParam int limit) {
 
-        return ResponseEntity.ok("response");
-    }
+    //     return ResponseEntity.ok("response");
+    // }
 }
