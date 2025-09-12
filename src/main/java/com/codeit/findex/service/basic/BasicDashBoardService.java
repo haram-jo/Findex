@@ -1,9 +1,12 @@
 package com.codeit.findex.service.basic;
 
+import com.codeit.findex.dto.data.ChartPeriodType;
+import com.codeit.findex.dto.data.IndexChartDto;
 import com.codeit.findex.dto.data.MajorIndexDto;
 import com.codeit.findex.dto.response.MajorIndexDataResponse;
 import com.codeit.findex.repository.DashBoardRepository;
 import com.codeit.findex.service.DashBoardService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -190,9 +193,14 @@ public class BasicDashBoardService implements DashBoardService {
         return result;
     }
 
+    @Override
+    public IndexChartDto getIndexChart(Long indexInfoId, ChartPeriodType periodType) {
+        IndexChartDto indexChartDto = dashBoardRepository.findIndexChartData(indexInfoId, periodType);
 
+        if (indexChartDto == null) {
+            throw new EntityNotFoundException("Cannot find Index Chart with ID: " + indexInfoId);
+        }
 
-
-
-
+        return indexChartDto;
+    }
 }

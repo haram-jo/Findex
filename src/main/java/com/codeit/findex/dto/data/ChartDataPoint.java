@@ -1,4 +1,9 @@
 package com.codeit.findex.dto.data;
 
-public record ChartDataPoint() {
-}
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+public record ChartDataPoint(
+        LocalDate date,
+        BigDecimal value
+) {}
