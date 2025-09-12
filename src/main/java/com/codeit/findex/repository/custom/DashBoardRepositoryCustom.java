@@ -11,4 +11,5 @@ public interface DashBoardRepositoryCustom {
 
     IndexChartDto findIndexChartData(Long indexInfoId, ChartPeriodType periodType);
 
+    List<MajorIndexDto> getCurrentAndPreviousMonthData(int month);
 }

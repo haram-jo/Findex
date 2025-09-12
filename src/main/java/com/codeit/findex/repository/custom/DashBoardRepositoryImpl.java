@@ -22,41 +22,14 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 @RequiredArgsConstructor
 public class DashBoardRepositoryImpl implements DashBoardRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
     private final IndexInfoRepository indexInfoRepository;
-
-
-    @Override
-    public List<MajorIndexDto> getFavoriteMajorIndexData(int month) {
-        QIndexInfo indexInfo = QIndexInfo.indexInfo;
-        QIndexData indexData = QIndexData.indexData;
-
-        int currentMonth = month;
-        int beforeMonth = month -1;
-
-        return queryFactory
-                .select(Projections.constructor(MajorIndexDto.class,
-                        indexInfo.id.as("indexInfoId"),
-                        indexInfo.indexClassification,
-                        indexInfo.indexName,
-                        indexData.baseDate,
-                        indexData.versus,
-                        indexData.fluctuationRate,
-                        indexData.closingPrice
-                ))
-                .from(indexInfo)
-                .join(indexData).on(indexInfo.id.eq(indexData.indexInfo.id))
-                .where(indexInfo.favorite.isTrue()
-                        .and(Expressions.numberTemplate(Integer.class,
-                                "EXTRACT(MONTH FROM {0})", indexData.baseDate).in(currentMonth, beforeMonth))
-                )
-                .orderBy(indexInfo.id.asc(), indexData.baseDate.asc())
-                .fetch();
-    }
 
     @Override
     public IndexChartDto findIndexChartData(Long indexInfoId, ChartPeriodType periodType) {
@@ -117,6 +90,59 @@ public class DashBoardRepositoryImpl implements DashBoardRepositoryCustom {
                 ma5DataPoints,
                 ma20DataPoints
         );
+    }
+
+    @Override
+    public List<MajorIndexDto> getFavoriteMajorIndexData(int month) {
+        QIndexInfo indexInfo = QIndexInfo.indexInfo;
+        QIndexData indexData = QIndexData.indexData;
+
+        int beforeMonth = month -1;
+
+        return queryFactory
+                .select(Projections.constructor(MajorIndexDto.class,
+                        indexInfo.id.as("indexInfoId"),
+                        indexInfo.indexClassification,
+                        indexInfo.indexName,
+                        indexData.baseDate,
+                        indexData.versus,
+                        indexData.fluctuationRate,
+                        indexData.closingPrice
+                ))
+                .from(indexInfo)
+                .join(indexData).on(indexInfo.id.eq(indexData.indexInfo.id))
+                .where(indexInfo.favorite.isTrue()
+                        .and(Expressions.numberTemplate(Integer.class,
+                                "EXTRACT(MONTH FROM {0})", indexData.baseDate).in(month, beforeMonth))
+                )
+                .orderBy(indexInfo.id.asc(), indexData.baseDate.asc())
+                .fetch();
+    }
+
+    @Override
+    public List<MajorIndexDto> getCurrentAndPreviousMonthData(int month) {
+        QIndexInfo indexInfo = QIndexInfo.indexInfo;
+        QIndexData indexData = QIndexData.indexData;
+
+        int beforeMonth = month -1;
+
+        return queryFactory
+                .select(Projections.constructor(MajorIndexDto.class,
+                        indexInfo.id.as("indexInfoId"),
+                        indexInfo.indexClassification,
+                        indexInfo.indexName,
+                        indexData.baseDate,
+                        indexData.versus,
+                        indexData.fluctuationRate,
+                        indexData.closingPrice
+                ))
+                .from(indexInfo)
+                .join(indexData).on(indexInfo.id.eq(indexData.indexInfo.id))
+                .where(Expressions.numberTemplate(Integer.class,
+                                "EXTRACT(MONTH FROM {0})", indexData.baseDate).in(month, beforeMonth)
+                )
+                .orderBy(indexInfo.id.asc(), indexData.baseDate.asc())
+                .fetch();
     }
 
     private LocalDate calculateStartDate(ChartPeriodType periodType) {

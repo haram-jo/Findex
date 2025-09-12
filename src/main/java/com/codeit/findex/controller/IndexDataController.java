@@ -7,6 +7,7 @@ import com.codeit.findex.dto.data.IndexDataDto;
 import com.codeit.findex.dto.request.IndexDataCreateRequest;
 import com.codeit.findex.dto.request.IndexDataSearchCondition;
 import com.codeit.findex.dto.request.IndexDataUpdateRequest;
+import com.codeit.findex.dto.response.IndexDataRank;
 import com.codeit.findex.dto.response.MajorIndexDataResponse;
 import com.codeit.findex.service.DashBoardService;
 import com.codeit.findex.service.IndexDataService;
@@ -76,17 +77,17 @@ public class IndexDataController {
         return ResponseEntity.ok(response);
     }
 
-    // @GetMapping("/performance/rank")
-    // public ResponseEntity<String> getIndexDataRank(@RequestParam String periodType, @RequestParam int limit) {
-
-    //     return ResponseEntity.ok("response");
-    // }
-
     @GetMapping("/{id}/chart")
     public ResponseEntity<IndexChartDto> getIndexChart(
             @PathVariable Long id,
             @RequestParam(defaultValue = "YEARLY") ChartPeriodType periodType) {
         IndexChartDto response = dashBoardService.getIndexChart(id, periodType);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/performance/rank")
+    public ResponseEntity<List<IndexDataRank>> getIndexDataRank(@RequestParam String periodType, @RequestParam int limit) {
+        List<IndexDataRank> response = dashBoardService.getIndexPerformance(periodType, limit);
         return ResponseEntity.ok(response);
     }
 }
