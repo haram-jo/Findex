@@ -1,17 +1,14 @@
 package com.codeit.findex.repository.custom;
 
 import com.codeit.findex.dto.data.MajorIndexDto;
-import com.codeit.findex.dto.response.MajorIndexDataResponse;
 import com.codeit.findex.entity.QIndexData;
 import com.codeit.findex.entity.QIndexInfo;
-import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -21,17 +18,12 @@ public class DashBoardRepositoryImpl implements DashBoardRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<MajorIndexDto> getFavoriteMajorIndexData(String periodType) {
-        QIndexData indexData = QIndexData.indexData;
+    public List<MajorIndexDto> getFavoriteMajorIndexData(int month) {
         QIndexInfo indexInfo = QIndexInfo.indexInfo;
+        QIndexData indexData = QIndexData.indexData;
 
-        // 최신 baseDate 가져오기 (기간 단위별로 다르게)
-        Expression<?> groupExpr;
-        switch (periodType.toUpperCase()) {
-            case "WEEKLY" -> groupExpr = Expressions.dateTemplate(LocalDate.class, "date_trunc('week', {0})", indexData.baseDate);
-            case "MONTHLY" -> groupExpr = Expressions.dateTemplate(LocalDate.class, "date_trunc('month', {0})", indexData.baseDate);
-            default -> groupExpr = indexData.baseDate;
-        }
+        int currentMonth = month;
+        int beforeMonth = month -1;
 
         return queryFactory
                 .select(Projections.constructor(MajorIndexDto.class,
@@ -39,13 +31,17 @@ public class DashBoardRepositoryImpl implements DashBoardRepositoryCustom {
                         indexInfo.indexClassification,
                         indexInfo.indexName,
                         indexData.baseDate,
+                        indexData.versus,
+                        indexData.fluctuationRate,
                         indexData.closingPrice
                 ))
-                .from(indexData)
-                .join(indexData.indexInfo, indexInfo)
-                .where(indexInfo.favorite.isTrue())
-                .orderBy(indexData.baseDate.desc())
+                .from(indexInfo)
+                .join(indexData).on(indexInfo.id.eq(indexData.indexInfo.id))
+                .where(indexInfo.favorite.isTrue()
+                        .and(Expressions.numberTemplate(Integer.class,
+                                "EXTRACT(MONTH FROM {0})", indexData.baseDate).in(currentMonth, beforeMonth))
+                )
+                .orderBy(indexInfo.id.asc(), indexData.baseDate.asc())
                 .fetch();
     }
-
 }

@@ -11,5 +11,7 @@ public record MajorIndexDto(
         String indexClassification,
         String indexName,
         LocalDate baseDate,
+        BigDecimal versus,
+        BigDecimal fluctuationRate,
         BigDecimal closingPrice
 ) {}

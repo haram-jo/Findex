@@ -58,3 +58,6 @@ CREATE TABLE auto_sync (
            REFERENCES index_infos (id)
            ON DELETE CASCADE
 );
+
+ALTER TABLE index_data
+    ADD CONSTRAINT uq_index_data UNIQUE (index_info_id, base_date);

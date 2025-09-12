@@ -8,13 +8,13 @@ import com.codeit.findex.dto.request.IndexDataUpdateRequest;
 import com.codeit.findex.dto.response.MajorIndexDataResponse;
 import com.codeit.findex.service.DashBoardService;
 import com.codeit.findex.service.IndexDataService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
@@ -72,5 +72,11 @@ public class IndexDataController {
     public ResponseEntity<List<MajorIndexDataResponse>> getMajorIndex(@RequestParam String periodType) {
         List<MajorIndexDataResponse> response = dashBoardService.getMajorIndex(periodType);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/performance/rank")
+    public ResponseEntity<String> getIndexDataRank(@RequestParam String periodType, @RequestParam int limit) {
+
+        return ResponseEntity.ok("response");
     }
 }
