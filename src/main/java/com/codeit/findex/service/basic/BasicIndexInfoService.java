@@ -10,13 +10,12 @@ import com.codeit.findex.mapper.IndexInfoMapper;
 import com.codeit.findex.repository.IndexInfoRepository;
 import com.codeit.findex.service.IndexInfoService;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 /* 지수 정보 구현체
  * 등록,수정,삭제 기능 제공

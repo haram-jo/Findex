@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -134,11 +135,7 @@ public class BasicSyncJobService implements SyncJobService {
             throw new IllegalArgumentException("존재하지 않는 지수정보가 포함되어 있습니다.");
         }
 
-        // key: 분류명 - value: 지수명
-        Map<String, String> indexInfoMap = indexInfoList.stream().collect(Collectors.toMap(
-                IndexInfo::getIndexClassification,         // key 매퍼
-                IndexInfo::getIndexName   // value 매퍼
-        ));
+        Set<String> indexInfoSet = indexInfoList.stream().map(indexInfo -> indexInfo.getIndexClassification()+indexInfo.getIndexName()).collect(Collectors.toSet());
 
         // 5. OpenApi에서 가져온 baseDate를 LocalDate로 변환
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -147,9 +144,7 @@ public class BasicSyncJobService implements SyncJobService {
         while (true) {
             List<IndexData> indexDataList = getFromOpenApiByBaseDate(pageNo, pageSize, beginDate, endDate).getResponse().getBody().getItems().getItem().stream()
                     // 지수 분류명으로 필터링
-                    .filter(item -> indexInfoMap.containsKey(item.getIndexClassification()))
-                    // 지수 이름으로 필터링
-                    .filter(item -> indexInfoMap.containsValue(item.getIndexName()))
+                    .filter(item -> indexInfoSet.contains(item.getIndexClassification()+item.getIndexName()))
                     .map(item -> {
                         IndexInfo matchedInfo = indexInfoList.stream()
                                 .filter(info -> info.getIndexName().equals(item.getIndexName()))
