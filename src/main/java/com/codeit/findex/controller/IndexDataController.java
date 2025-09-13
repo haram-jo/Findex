@@ -1,20 +1,23 @@
 package com.codeit.findex.controller;
 
+import com.codeit.findex.dto.data.ChartPeriodType;
 import com.codeit.findex.dto.data.CursorPageResponseIndexDataDto;
+import com.codeit.findex.dto.data.IndexChartDto;
 import com.codeit.findex.dto.data.IndexDataDto;
 import com.codeit.findex.dto.request.IndexDataCreateRequest;
 import com.codeit.findex.dto.request.IndexDataSearchCondition;
 import com.codeit.findex.dto.request.IndexDataUpdateRequest;
+import com.codeit.findex.dto.response.IndexDataRank;
 import com.codeit.findex.dto.response.MajorIndexDataResponse;
 import com.codeit.findex.service.DashBoardService;
 import com.codeit.findex.service.IndexDataService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
@@ -71,6 +74,20 @@ public class IndexDataController {
     @GetMapping("/performance/favorite")
     public ResponseEntity<List<MajorIndexDataResponse>> getMajorIndex(@RequestParam String periodType) {
         List<MajorIndexDataResponse> response = dashBoardService.getMajorIndex(periodType);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/chart")
+    public ResponseEntity<IndexChartDto> getIndexChart(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "YEARLY") ChartPeriodType periodType) {
+        IndexChartDto response = dashBoardService.getIndexChart(id, periodType);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/performance/rank")
+    public ResponseEntity<List<IndexDataRank>> getIndexDataRank(@RequestParam String periodType, @RequestParam int limit) {
+        List<IndexDataRank> response = dashBoardService.getIndexPerformance(periodType, limit);
         return ResponseEntity.ok(response);
     }
 }

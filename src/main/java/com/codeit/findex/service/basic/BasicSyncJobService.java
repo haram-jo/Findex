@@ -179,7 +179,7 @@ public class BasicSyncJobService implements SyncJobService {
     /** OpenApi에서 받아온 데이터로 Index_infos 값에 매핑 후 DB에 저장 */
     public void createIndexInfos() {
         int pageNo = 1;
-        int pageSize = 999;
+        int pageSize = 500;
 
         Set<String> seen = new HashSet<>();
 
