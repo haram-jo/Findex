@@ -1,8 +1,6 @@
 package com.codeit.findex.service.basic;
 
 import com.codeit.findex.client.MarketIndexApiClient;
-import com.codeit.findex.dto.data.IndexDataUnique;
-import com.codeit.findex.dto.data.IndexInfoUnique;
 import com.codeit.findex.dto.request.IndexDataSyncRequest;
 import com.codeit.findex.dto.response.MarketIndexApiResponse;
 import com.codeit.findex.entity.IndexData;
@@ -16,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
