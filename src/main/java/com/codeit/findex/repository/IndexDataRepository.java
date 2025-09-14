@@ -36,4 +36,7 @@ public interface IndexDataRepository extends JpaRepository<IndexData, Long>, Ind
           )
     """)
     Optional<IndexData> findLatestByIndexInfoId(Long indexInfoId);
+
+    @Query("select d.baseDate from IndexData d where d.indexInfo.id = :indexInfoId and d.baseDate in :dates")
+    List<LocalDate> findExistingDates(Long indexInfoId, List<LocalDate> dates);
 }

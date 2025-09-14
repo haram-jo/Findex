@@ -58,6 +58,8 @@ public class MarketIndexApiClient {
                         .queryParam("pageNo", pageNo)
                         .queryParam("numOfRows", numOfRows)
                         .queryParam("idxNm", indexName)
+                        .queryParam("beginBasDt", beginDate)
+                        .queryParam("endBasDt", endDate)
                         .build())
                 .accept(MediaType.ALL)
                 .retrieve()

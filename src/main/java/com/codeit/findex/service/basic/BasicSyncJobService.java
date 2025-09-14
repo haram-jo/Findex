@@ -18,10 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -78,35 +75,40 @@ public class BasicSyncJobService implements SyncJobService {
     @Transactional
     public List<SyncJobDto> createIndexDataSyncJob(String workerId, IndexDataSyncRequest request) {
         // 1. 지수 데이터 DB에 저장
-        indexDataSyncService.createIndexData(request);
+        List<IndexData> indexDataList = indexDataSyncService.createIndexData(request);
 
         // 2. 연동 정보 DB에 저장
-        List<SyncJobDto> syncJobDtos = createSyncJobsOfIndexData(workerId, request.indexInfoIds().get(0));
+        List<SyncJobDto> syncJobDtos = createSyncJobsOfIndexData(workerId, indexDataList);
 
         return syncJobDtos;
     }
 
-    private List<SyncJobDto> createSyncJobsOfIndexData(String workerId, Long indexInfoId) {
-        List<SyncJobDto> syncJobRegistry = new ArrayList<>(); // SyncJob 테이블에 최종적으로 저장되는 데이터 목록
-        List<IndexData> syncedIndexInfos = indexDataRepository.findAll();
+    private List<SyncJobDto> createSyncJobsOfIndexData(String workerId, List<IndexData> indexDataList) {
 
-        for (IndexData indexData : syncedIndexInfos) {
-            SyncJobDto newSyncJob = SyncJobDto.builder()
-                    .indexInfoId(indexInfoId)
+        List<SyncJob> newSyncJobList = indexDataList.stream().map(indexData -> {
+            return SyncJob.builder()
                     .jobType(JobType.INDEX_DATA)
-                    .jobTime(LocalDateTime.now()) // 작업 일시
-                    .targetDate(indexData.getBaseDate()) // 연동한 날짜(대상 날짜)
+                    .indexInfo(indexData.getIndexInfo())
+                    .targetDate(indexData.getBaseDate())
                     .worker(workerId)
-                    .result(ResultType.SUCCESS)
+                    .jobTime(LocalDateTime.now())
+                    .result(true)
                     .build();
+        }).toList();
 
-            syncJobRegistry.add(newSyncJob);
-        }
+        List<SyncJob> filtered = newSyncJobList.stream()
+                .filter(syncJob -> !syncJobRepository.existsByJobTypeAndIndexInfoIdAndTargetDate(
+                        syncJob.getJobType(),
+                        syncJob.getIndexInfo().getId(),
+                        syncJob.getTargetDate()
+                ))
+                .toList();
 
-        if (!syncJobRegistry.isEmpty()) {
-            syncJobRepository.saveAllInBatchWithTargetDate(syncJobRegistry);
+        if (!filtered.isEmpty()) {
+            //syncJobRepository.saveAllInBatchWithTargetDate(filtered);
+            syncJobRepository.saveAll(filtered);
         }
-        return syncJobRegistry;
+        return newSyncJobList.stream().map(syncJobMapper::toDto).toList();
     }
 
     @Override
