@@ -26,5 +26,7 @@ public interface IndexInfoRepositoryCustom {
       String indexName,
       Boolean favorite
   );
+
+  void saveAllInBatch(List<IndexInfo> indexInfos);
 }
 

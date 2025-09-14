@@ -5,6 +5,9 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 
@@ -14,10 +17,13 @@ import org.springframework.stereotype.Repository;
  */
 
 @Repository
+@RequiredArgsConstructor
 public class IndexInfoRepositoryImpl implements IndexInfoRepositoryCustom {
 
   @PersistenceContext
   private EntityManager em; //DB 쿼리 직접 날릴 수 있는 객체
+
+  private final JdbcTemplate jdbcTemplate;
 
   //조건에 따른 지수 목록 조회 메서드 (필터 + 정렬 + 페이지네이션)
   @Override
@@ -108,6 +114,34 @@ public class IndexInfoRepositoryImpl implements IndexInfoRepositoryCustom {
 
     // 4. 결과 반환
     return (Long) query.getSingleResult(); //List<IndexInfo>로 응답
+  }
+
+  @Override
+  public void saveAllInBatch(List<IndexInfo> indexInfos) {
+    StringBuilder query = new StringBuilder();
+
+    query.append("INSERT INTO index_infos ")
+            .append("(index_classification, index_name, employed_items_count, base_point_in_time, base_index, source_type) ")
+            .append("VALUES ");
+
+    for (int i = 0; i < indexInfos.size(); i++) {
+      IndexInfo info = indexInfos.get(i);
+
+      query.append("(")
+              .append("'").append(info.getIndexClassification()).append("', ")
+              .append("'").append(info.getIndexName()).append("', ")
+              .append(info.getEmployedItemsCount()).append(", ")
+              .append("'").append(info.getBasePointInTime()).append("', ")
+              .append(info.getBaseIndex()).append(", ")
+              .append("'").append(info.getSourceType().name()).append("'")
+              .append(")");
+
+      if (i < indexInfos.size() - 1) {
+        query.append(", ");
+      }
+    }
+
+    em.createNativeQuery(query.toString()).executeUpdate();
   }
 }
   
