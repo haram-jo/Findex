@@ -170,4 +170,39 @@ public class IndexDataRepositoryImpl implements IndexDataRepositoryCustom {
 
         return query.getResultList();
     }
+
+    @Override
+    public void saveAllInBatch(List<IndexData> indexDataList, Long indexInfoId) {
+        StringBuilder query = new StringBuilder();
+
+        query.append("INSERT INTO index_data ")
+            .append("(index_info_id, base_date, source_type, market_price, closing_price, high_price, " +
+                    "low_price, versus, fluctuation_rate, trading_quantity, trading_price, market_total_amount) ")
+            .append("VALUES ");
+
+        for (int i = 0; i < indexDataList.size(); i++) {
+            IndexData data = indexDataList.get(i);
+
+            query.append("(")
+                .append("'").append(indexInfoId).append("', ")
+                .append("'").append(data.getBaseDate()).append("', ")
+                .append("'").append(data.getSourceType()).append("', ")
+                .append(data.getMarketPrice()).append(", ")
+                .append(data.getClosingPrice()).append(", ")
+                .append(data.getHighPrice()).append(", ")
+                .append(data.getLowPrice()).append(", ")
+                .append(data.getVersus()).append(", ")
+                .append(data.getFluctuationRate()).append(", ")
+                .append(data.getTradingQuantity()).append(", ")
+                .append(data.getTradingPrice()).append(", ")
+                .append(data.getMarketTotalAmount())
+                .append(")");
+
+            if (i < indexDataList.size() - 1) {
+                query.append(", ");
+            }
+        }
+
+        em.createNativeQuery(query.toString()).executeUpdate();
+    }
 }

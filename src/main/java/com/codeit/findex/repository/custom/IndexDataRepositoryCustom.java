@@ -13,4 +13,5 @@ public interface IndexDataRepositoryCustom {
 
     List<IndexData> findAllByCondition(IndexDataSearchCondition condition);
 
+    void saveAllInBatch(List<IndexData> indexDataList, Long indexInfoId);
 }

@@ -12,4 +12,16 @@ public interface DashBoardRepositoryCustom {
     IndexChartDto findIndexChartData(Long indexInfoId, ChartPeriodType periodType);
 
     List<MajorIndexDto> getCurrentAndPreviousMonthData(int month);
+
+    // 최신 데이터
+    MajorIndexDto getLatestMajorIndexData(Long indexInfoId);
+
+    // 하루 전 데이터
+    MajorIndexDto getBeforeDayMajorIndexData(Long indexInfoId);
+
+    // 일주일 전 데이터
+    MajorIndexDto getBeforeWeekMajorIndexData(Long indexInfoId);
+
+    // 한달 전 데이터
+    MajorIndexDto getBeforeMonthMajorIndexData(Long indexInfoId);
 }

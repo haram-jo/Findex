@@ -5,7 +5,10 @@ import com.codeit.findex.dto.data.IndexChartDto;
 import com.codeit.findex.dto.data.MajorIndexDto;
 import com.codeit.findex.dto.response.IndexDataRank;
 import com.codeit.findex.dto.response.MajorIndexDataResponse;
+import com.codeit.findex.entity.IndexInfo;
 import com.codeit.findex.repository.DashBoardRepository;
+import com.codeit.findex.repository.IndexDataRepository;
+import com.codeit.findex.repository.IndexInfoRepository;
 import com.codeit.findex.service.DashBoardService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +18,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -26,7 +26,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BasicDashBoardService implements DashBoardService {
 
+    private final IndexInfoRepository indexInfoRepository;
     private final DashBoardRepository dashBoardRepository;
+    private final IndexDataRepository indexDataRepository;
 
     /**
      * 주요 지수
@@ -35,16 +37,17 @@ public class BasicDashBoardService implements DashBoardService {
      */
     @Override
     public List<MajorIndexDataResponse> getMajorIndex(String periodType) {
-        LocalDate now = LocalDate.now();
-        int month = now.getMonthValue();
 
-        List<MajorIndexDto> rawData = dashBoardRepository.getFavoriteMajorIndexData(month);
+        List<Long> favoriteIds = indexInfoRepository.findByFavoriteTrue()
+                .stream()
+                .map(IndexInfo::getId)
+                .toList();
 
         List<MajorIndexDataResponse> response = null;
 
-        if(periodType.equals("DAILY")) response = dailyMajorIndex(rawData);
-        if(periodType.equals("WEEKLY")) response = weeklyMajorIndex(rawData);
-        if(periodType.equals("MONTHLY")) response = monthlyMajorIndex(rawData);
+        if(periodType.equals("DAILY")) response = dailyMajorIndex(favoriteIds);
+        if(periodType.equals("WEEKLY")) response = weeklyMajorIndex(favoriteIds);
+        if(periodType.equals("MONTHLY")) response = monthlyMajorIndex(favoriteIds);
 
         return response;
     }
@@ -67,17 +70,14 @@ public class BasicDashBoardService implements DashBoardService {
     public List<IndexDataRank> getIndexPerformance(String periodType, int limit) {
         List<IndexDataRank> response = new ArrayList<>();
 
-        LocalDate now = LocalDate.now(); // 오늘
-        int month = now.getMonthValue(); // 저번 달
-
-        // DB에서 이번달과 저번달 데이터 모두 가져오기
-        List<MajorIndexDto> rawData = dashBoardRepository.getCurrentAndPreviousMonthData(month);
+        // indexData 테이블에 있는 모든 indexInfoId 조회
+        List<Long> favoriteIds = indexDataRepository.findDistinctIndexInfoIds();
 
         List<MajorIndexDataResponse> majorDatalist = new ArrayList<>();
 
-        if(periodType.equals("DAILY")) majorDatalist = dailyMajorIndex(rawData);
-        if(periodType.equals("WEEKLY")) majorDatalist = weeklyMajorIndex(rawData);
-        if(periodType.equals("MONTHLY")) majorDatalist = monthlyMajorIndex(rawData);
+        if(periodType.equals("DAILY")) majorDatalist = dailyMajorIndex(favoriteIds);
+        if(periodType.equals("WEEKLY")) majorDatalist = weeklyMajorIndex(favoriteIds);
+        if(periodType.equals("MONTHLY")) majorDatalist = monthlyMajorIndex(favoriteIds);
 
         AtomicInteger counter = new AtomicInteger(1);
 
@@ -98,142 +98,147 @@ public class BasicDashBoardService implements DashBoardService {
      * - 오늘 날짜와 어제 날짜 반환
      * - 계산 필요없이 DB값 그대로, 어제 날짜만 찾으면 됨
      */
-    private List<MajorIndexDataResponse> dailyMajorIndex(List<MajorIndexDto> data) {
+    private List<MajorIndexDataResponse> dailyMajorIndex(List<Long> favoriteIds) {
 
-        LocalDate today = LocalDate.now().minusDays(1); // 오늘 날짜(지수상 오늘 날짜는 없기 때문에 -1이 당일이라고 침
+        // 1. 오늘의 지수 데이터 조회
+        List<MajorIndexDto> latestMajorIndexList = favoriteIds.stream()
+                .map(dashBoardRepository::getLatestMajorIndexData)
+                .filter(Objects::nonNull)
+                .toList();
 
-        // 오늘의 지수 데이터 조회
-        List<MajorIndexDto> todayMajorIndexList = data.stream()
-                .filter(indexData -> indexData.baseDate().equals(today)).toList();
+        // 2. 어제의 지수 데이터 조회
+        List<MajorIndexDto> beforeDayMajorIndexList = favoriteIds.stream()
+                .map(dashBoardRepository::getBeforeDayMajorIndexData)
+                .filter(Objects::nonNull)
+                .toList();
 
-        List<MajorIndexDataResponse> result = new ArrayList<>(); // 없으면 빈 문자열 넘겨주기
+        List<MajorIndexDataResponse> result = new ArrayList<>();
 
-        if(!todayMajorIndexList.isEmpty()) {
-            result =  todayMajorIndexList.stream().map(majorIndex -> {
+        // 어제 데이터 Map으로 변환 (key = indexInfoId)
+        Map<Long, MajorIndexDto> beforeMap = beforeDayMajorIndexList.stream()
+                .collect(Collectors.toMap(MajorIndexDto::indexInfoId, dto -> dto));
 
-                Optional<MajorIndexDto> yesterdayData = data.stream()
-                        .filter(d -> d.indexInfoId().equals(majorIndex.indexInfoId()))
-                        .filter(d -> d.baseDate().isBefore(today))
-                        .max(Comparator.comparing(MajorIndexDto::baseDate));
+        // latest 중에서 before 데이터가 있는 경우만 계산
+        for (MajorIndexDto latest : latestMajorIndexList) {
+            MajorIndexDto before = beforeMap.get(latest.indexInfoId());
+            if (before != null) {
+                BigDecimal currentPrice = latest.closingPrice();
+                BigDecimal beforePrice = before.closingPrice();
 
-                BigDecimal currentPrice = majorIndex.closingPrice();
-                BigDecimal beforePrice = yesterdayData.map(MajorIndexDto::closingPrice).orElse(currentPrice); // 전날 값이 없으면 현재 값으로 채움
-                BigDecimal versus = majorIndex.versus(); // 일별 날짜는 DB에서 내려주는 값 그대로 계산 필요 X
-                BigDecimal fluctuationRate = majorIndex.fluctuationRate(); // 일별 날짜는 DB에서 내려주는 값 그대로 계산 필요 X
+                // 등락/등락률은 DB에서 가져온 값 대신 직접 계산해도 됨
+                BigDecimal versus = currentPrice.subtract(beforePrice);
+                BigDecimal fluctuationRate = beforePrice.compareTo(BigDecimal.ZERO) == 0
+                        ? BigDecimal.ZERO
+                        : versus.divide(beforePrice, 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
 
-                return MajorIndexDataResponse.builder()
-                        .indexInfoId(majorIndex.indexInfoId())
-                        .indexClassification(majorIndex.indexClassification())
-                        .indexName(majorIndex.indexName())
+                result.add(MajorIndexDataResponse.builder()
+                        .indexInfoId(latest.indexInfoId())
+                        .indexClassification(latest.indexClassification())
+                        .indexName(latest.indexName())
                         .versus(versus)
                         .fluctuationRate(fluctuationRate)
                         .currentPrice(currentPrice)
                         .beforePrice(beforePrice)
-                        .build();
-            }).toList();
+                        .build());
+            }
         }
 
         return result;
     }
 
+
+
     /**
      * 주 별 주요 지수
      */
-    private List<MajorIndexDataResponse> weeklyMajorIndex(List<MajorIndexDto> data) {
+    private List<MajorIndexDataResponse> weeklyMajorIndex(List<Long> favoriteIds) {
+        // 1. 오늘의 지수 데이터 조회
+        List<MajorIndexDto> latestMajorIndexList = favoriteIds.stream()
+                .map(dashBoardRepository::getLatestMajorIndexData)
+                .filter(Objects::nonNull)
+                .toList();
+
+        // 2. 일주일 전의 지수 데이터 조회
+        List<MajorIndexDto> beforeWeekMajorIndexList = favoriteIds.stream()
+                .map(dashBoardRepository::getBeforeWeekMajorIndexData)
+                .filter(Objects::nonNull)
+                .toList();
 
         List<MajorIndexDataResponse> result = new ArrayList<>();
 
-        LocalDate thisWeek = LocalDate.now().minusDays(1); // 이번주
-        LocalDate beforeWeek = thisWeek.minusWeeks(1).with(DayOfWeek.FRIDAY); // 지난주 금요일
+        // before 데이터 Map으로 변환
+        Map<Long, MajorIndexDto> beforeMap = beforeWeekMajorIndexList.stream()
+                .collect(Collectors.toMap(MajorIndexDto::indexInfoId, dto -> dto));
 
-        // 이번주 지수 데이터
-        List<MajorIndexDto> thisWeekIndexList = data.stream()
-                .filter(indexData -> indexData.baseDate().equals(thisWeek)).toList();
+        // latest 중에서 before 데이터가 있는 경우만 처리
+        for (MajorIndexDto latest : latestMajorIndexList) {
+            MajorIndexDto before = beforeMap.get(latest.indexInfoId());
+            if (before != null) {
+                BigDecimal currentPrice = latest.closingPrice();
+                BigDecimal beforePrice = before.closingPrice();
+                BigDecimal versus = currentPrice.subtract(beforePrice);
+                BigDecimal fluctuationRate = beforePrice.compareTo(BigDecimal.ZERO) == 0
+                        ? BigDecimal.ZERO
+                        : versus.divide(beforePrice, 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
 
-        // 지난 주 지수 데이터
-        List<MajorIndexDto> beforeWeekIndexList = data.stream()
-                .filter(indexData -> indexData.baseDate().equals(beforeWeek)).toList();
+                result.add(MajorIndexDataResponse.builder()
+                        .indexInfoId(latest.indexInfoId())
+                        .indexClassification(latest.indexClassification())
+                        .indexName(latest.indexName())
+                        .versus(versus)
+                        .fluctuationRate(fluctuationRate)
+                        .currentPrice(currentPrice)
+                        .beforePrice(beforePrice)
+                        .build());
+            }
+        }
 
-        if(!thisWeekIndexList.isEmpty() && !beforeWeekIndexList.isEmpty()) {
-                result = thisWeekIndexList.stream().map(majorIndex -> {
-                    BigDecimal currentPrice = majorIndex.closingPrice(); // 이번 주
-                    BigDecimal beforePrice = beforeWeekIndexList.stream()
-                            .filter(beforeData -> beforeData.indexInfoId().equals(majorIndex.indexInfoId()))
-                            .map(MajorIndexDto::closingPrice).findFirst().orElse(currentPrice);
+        return result;
+    }
+
+
+    /**
+     * 월 별 주요 지수
+     */
+    private List<MajorIndexDataResponse> monthlyMajorIndex(List<Long> favoriteIds) {
+        // 1. 오늘의 지수 데이터 조회
+        List<MajorIndexDto> latestMajorIndexList = favoriteIds.stream().map(dashBoardRepository::getLatestMajorIndexData).toList();
+        // 2. 한 달 전의 지수 데이터
+        List<MajorIndexDto> beforeMonthMajorIndexList = favoriteIds.stream().map(dashBoardRepository::getBeforeMonthMajorIndexData)
+                .filter(Objects::nonNull)
+                .toList();
+
+        List<MajorIndexDataResponse> result = new ArrayList<>(); // 없으면 빈 문자열 넘겨주기
+
+        Map<Long, MajorIndexDto> beforeMap = beforeMonthMajorIndexList.stream()
+                .collect(Collectors.toMap(MajorIndexDto::indexInfoId, dto -> dto));
+
+        List<MajorIndexDto> existedLatestMajorIndex = latestMajorIndexList.stream()
+                .filter(latest -> beforeMap.containsKey(latest.indexInfoId())).toList();
+
+        for(MajorIndexDto latest : existedLatestMajorIndex) {
+            for(MajorIndexDto before : beforeMap.values()) {
+                if(latest.indexInfoId().equals(before.indexInfoId())) {
+                    BigDecimal currentPrice = latest.closingPrice();
+                    BigDecimal beforePrice = before.closingPrice();
                     BigDecimal versus = currentPrice.subtract(beforePrice);
                     BigDecimal fluctuationRate = beforePrice.compareTo(BigDecimal.ZERO) == 0
                             ? BigDecimal.ZERO
                             : versus.divide(beforePrice, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
 
-                    return MajorIndexDataResponse.builder()
-                            .indexInfoId(majorIndex.indexInfoId())
-                            .indexClassification(majorIndex.indexClassification())
-                            .indexName(majorIndex.indexName())
+                    result.add(MajorIndexDataResponse.builder()
+                            .indexInfoId(latest.indexInfoId())
+                            .indexClassification(latest.indexClassification())
+                            .indexName(latest.indexName())
                             .versus(versus)
                             .fluctuationRate(fluctuationRate)
                             .currentPrice(currentPrice)
                             .beforePrice(beforePrice)
-                            .build();
-                }).toList();
-        }
-
-        return result;
-    }
-
-    /**
-     * 월 별 주요 지수
-     */
-    private List<MajorIndexDataResponse> monthlyMajorIndex(List<MajorIndexDto> data) {
-        List<MajorIndexDataResponse> result = new ArrayList<>();
-
-        LocalDate thisMonth = LocalDate.now().minusDays(1);
-        LocalDate beforeMonth = LocalDate.now().minusMonths(1); // 8예상
-
-        // 이번 달 지수 데이터
-        List<MajorIndexDto> thisMonthData = data.stream()
-                .filter(indexData -> indexData.baseDate().equals(thisMonth)).toList();
-
-        // 지난 달 지수 데이터(지난달의 가장 최신 데이터)
-        List<MajorIndexDto> beforeMonthData = data.stream()
-                // 지난 달 데이터만 필터링
-                .filter(indexData -> indexData.baseDate().getMonthValue() == beforeMonth.getMonthValue())
-                .collect(Collectors.collectingAndThen(
-                        Collectors.toList(),
-                        list -> {
-                            if (list.isEmpty()) return List.of(); // 빈 경우 방어
-                            LocalDate latestDate = list.stream()
-                                    .map(MajorIndexDto::baseDate)
-                                    .max(LocalDate::compareTo)
-                                    .get();
-
-                            return list.stream()
-                                    .filter(item -> item.baseDate().equals(latestDate))
-                                    .toList();
-                        }
-                ));
-
-        if(!thisMonthData.isEmpty() && !beforeMonthData.isEmpty()) {
-            result = thisMonthData.stream().map(majorIndex -> {
-                BigDecimal currentPrice = majorIndex.closingPrice();
-                BigDecimal beforePrice = beforeMonthData.stream()
-                        .filter(beforeData -> beforeData.indexInfoId().equals(majorIndex.indexInfoId()))
-                        .map(MajorIndexDto::closingPrice).findFirst().orElse(currentPrice);
-                BigDecimal versus = currentPrice.subtract(beforePrice);
-                BigDecimal fluctuationRate = beforePrice.compareTo(BigDecimal.ZERO) == 0
-                        ? BigDecimal.ZERO
-                        : versus.divide(beforePrice, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
-
-                return MajorIndexDataResponse.builder()
-                        .indexInfoId(majorIndex.indexInfoId())
-                        .indexClassification(majorIndex.indexClassification())
-                        .indexName(majorIndex.indexName())
-                        .versus(versus)
-                        .fluctuationRate(fluctuationRate)
-                        .currentPrice(currentPrice)
-                        .beforePrice(beforePrice)
-                        .build();
-            }).toList();
-
+                            .build());
+                }
+            }
         }
         return result;
     }

@@ -153,4 +153,104 @@ public class DashBoardRepositoryImpl implements DashBoardRepositoryCustom {
             case YEARLY -> today.minusYears(1);
         };
     }
+
+    @Override
+    public MajorIndexDto getLatestMajorIndexData(Long indexInfoId) {
+        QIndexData d = QIndexData.indexData;
+        QIndexInfo i = QIndexInfo.indexInfo;
+
+        return queryFactory
+                .select(Projections.constructor(
+                        MajorIndexDto.class,
+                        d.indexInfo.id,          // IndexInfoId
+                        i.indexClassification,   // 분류명
+                        i.indexName,             // 지수명
+                        d.baseDate,              // 기준일
+                        d.versus,                // 대비
+                        d.fluctuationRate,       // 등락률
+                        d.closingPrice           // 종가
+                ))
+                .from(d)
+                .join(d.indexInfo, i) // d.indexInfo (연관관계 필드)와 i 매핑
+                .where(d.indexInfo.id.eq(indexInfoId))
+                .orderBy(d.baseDate.desc())
+                .limit(1)
+                .fetchOne();
+    }
+
+    @Override
+    public MajorIndexDto getBeforeDayMajorIndexData(Long indexInfoId) {
+        QIndexData d = QIndexData.indexData;
+        QIndexInfo i = QIndexInfo.indexInfo;
+
+        return queryFactory
+                .select(Projections.constructor(
+                        MajorIndexDto.class,
+                        d.indexInfo.id,        // d.INDEX_INFO_ID
+                        i.indexClassification, // i.INDEX_CLASSIFICATION
+                        i.indexName,           // i.INDEX_NAME
+                        d.baseDate,            // d.BASE_DATE
+                        d.versus,              // d.VERSUS
+                        d.fluctuationRate,     // d.FLUCTUATION_RATE
+                        d.closingPrice         // d.CLOSING_PRICE
+                ))
+                .from(d)
+                .join(i).on(d.indexInfo.id.eq(i.id))
+                .where(d.indexInfo.id.eq(indexInfoId))
+                .orderBy(d.baseDate.desc())
+                .offset(1)  // OFFSET 1
+                .limit(1)   // LIMIT 1
+                .fetchOne();
+    }
+
+    @Override
+    public MajorIndexDto getBeforeWeekMajorIndexData(Long indexInfoId) {
+        QIndexData d = QIndexData.indexData;
+        QIndexInfo i = QIndexInfo.indexInfo;
+
+        return queryFactory
+                .select(Projections.constructor(
+                        MajorIndexDto.class,
+                        d.indexInfo.id,        // d.INDEX_INFO_ID
+                        i.indexClassification, // i.INDEX_CLASSIFICATION
+                        i.indexName,           // i.INDEX_NAME
+                        d.baseDate,            // d.BASE_DATE
+                        d.versus,              // d.VERSUS
+                        d.fluctuationRate,     // d.FLUCTUATION_RATE
+                        d.closingPrice         // d.CLOSING_PRICE
+                ))
+                .from(d)
+                .join(i).on(d.indexInfo.id.eq(i.id))
+                .where(d.indexInfo.id.eq(indexInfoId))
+                .orderBy(d.baseDate.desc())
+                .offset(7)  // OFFSET 1
+                .limit(1)   // LIMIT 1
+                .fetchOne();
+    }
+
+    @Override
+    public MajorIndexDto getBeforeMonthMajorIndexData(Long indexInfoId) {
+        QIndexData d = QIndexData.indexData;
+        QIndexInfo i = QIndexInfo.indexInfo;
+
+        return queryFactory
+                .select(Projections.constructor(
+                        MajorIndexDto.class,
+                        d.indexInfo.id,        // d.INDEX_INFO_ID
+                        i.indexClassification, // i.INDEX_CLASSIFICATION
+                        i.indexName,           // i.INDEX_NAME
+                        d.baseDate,            // d.BASE_DATE
+                        d.versus,              // d.VERSUS
+                        d.fluctuationRate,     // d.FLUCTUATION_RATE
+                        d.closingPrice         // d.CLOSING_PRICE
+                ))
+                .from(d)
+                .join(i).on(d.indexInfo.id.eq(i.id))
+                .where(d.indexInfo.id.eq(indexInfoId))
+                .orderBy(d.baseDate.desc())
+                .offset(30)  // OFFSET 1
+                .limit(1)   // LIMIT 1
+                .fetchOne();
+    }
+
 }

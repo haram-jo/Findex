@@ -12,10 +12,9 @@ import org.springframework.data.jpa.repository.Query;
 CustomRepository로 분리
  */
 public interface IndexInfoRepository extends JpaRepository<IndexInfo, Long>, IndexInfoRepositoryCustom {
-
-    boolean existsByIndexClassificationAndIndexName(String indexClassification, String indexName);
-
     //지수 요약 목록 조회
     @Query("SELECT new com.codeit.findex.dto.data.IndexInfoSummaryDto(i.id, i.indexClassification, i.indexName) FROM IndexInfo i")
     List<IndexInfoSummaryDto> findAllSummaries();
+
+    List<IndexInfo> findByFavoriteTrue();
 }
