@@ -39,4 +39,7 @@ public interface IndexDataRepository extends JpaRepository<IndexData, Long>, Ind
 
     @Query("select d.baseDate from IndexData d where d.indexInfo.id = :indexInfoId and d.baseDate in :dates")
     List<LocalDate> findExistingDates(Long indexInfoId, List<LocalDate> dates);
+
+    @Query("select distinct d.indexInfo.id from IndexData d")
+    List<Long> findDistinctIndexInfoIds();
 }

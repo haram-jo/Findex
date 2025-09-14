@@ -7,6 +7,7 @@ import com.codeit.findex.dto.response.IndexDataRank;
 import com.codeit.findex.dto.response.MajorIndexDataResponse;
 import com.codeit.findex.entity.IndexInfo;
 import com.codeit.findex.repository.DashBoardRepository;
+import com.codeit.findex.repository.IndexDataRepository;
 import com.codeit.findex.repository.IndexInfoRepository;
 import com.codeit.findex.service.DashBoardService;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,10 +18,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -30,6 +28,7 @@ public class BasicDashBoardService implements DashBoardService {
 
     private final IndexInfoRepository indexInfoRepository;
     private final DashBoardRepository dashBoardRepository;
+    private final IndexDataRepository indexDataRepository;
 
     /**
      * 주요 지수
@@ -38,8 +37,6 @@ public class BasicDashBoardService implements DashBoardService {
      */
     @Override
     public List<MajorIndexDataResponse> getMajorIndex(String periodType) {
-        LocalDate now = LocalDate.now();
-        int month = now.getMonthValue();
 
         List<Long> favoriteIds = indexInfoRepository.findByFavoriteTrue()
                 .stream()
@@ -73,16 +70,8 @@ public class BasicDashBoardService implements DashBoardService {
     public List<IndexDataRank> getIndexPerformance(String periodType, int limit) {
         List<IndexDataRank> response = new ArrayList<>();
 
-        LocalDate now = LocalDate.now(); // 오늘
-        int month = now.getMonthValue(); // 저번 달
-
-        // DB에서 이번달과 저번달 데이터 모두 가져오기
-        List<MajorIndexDto> rawData = dashBoardRepository.getCurrentAndPreviousMonthData(month);
-
-        List<Long> favoriteIds = indexInfoRepository.findByFavoriteTrue()
-                .stream()
-                .map(IndexInfo::getId)
-                .toList();
+        // indexData 테이블에 있는 모든 indexInfoId 조회
+        List<Long> favoriteIds = indexDataRepository.findDistinctIndexInfoIds();
 
         List<MajorIndexDataResponse> majorDatalist = new ArrayList<>();
 
@@ -112,21 +101,36 @@ public class BasicDashBoardService implements DashBoardService {
     private List<MajorIndexDataResponse> dailyMajorIndex(List<Long> favoriteIds) {
 
         // 1. 오늘의 지수 데이터 조회
-        List<MajorIndexDto> latestMajorIndexList = favoriteIds.stream().map(dashBoardRepository::getLatestMajorIndexData).toList();
-        // 2. 어제의 지수 데이터
-        List<MajorIndexDto> beforeDayMajorIndexList = favoriteIds.stream().map(dashBoardRepository::getBeforeDayMajorIndexData).toList();
+        List<MajorIndexDto> latestMajorIndexList = favoriteIds.stream()
+                .map(dashBoardRepository::getLatestMajorIndexData)
+                .filter(Objects::nonNull)
+                .toList();
 
-        List<MajorIndexDataResponse> result = new ArrayList<>(); // 없으면 빈 문자열 넘겨주기
+        // 2. 어제의 지수 데이터 조회
+        List<MajorIndexDto> beforeDayMajorIndexList = favoriteIds.stream()
+                .map(dashBoardRepository::getBeforeDayMajorIndexData)
+                .filter(Objects::nonNull)
+                .toList();
 
-        if(!latestMajorIndexList.isEmpty() && !beforeDayMajorIndexList.isEmpty()) {
-            for (int i = 0; i < latestMajorIndexList.size(); i++) {
-                MajorIndexDto latest = latestMajorIndexList.get(i);
-                MajorIndexDto before = beforeDayMajorIndexList.get(i);
+        List<MajorIndexDataResponse> result = new ArrayList<>();
 
+        // 어제 데이터 Map으로 변환 (key = indexInfoId)
+        Map<Long, MajorIndexDto> beforeMap = beforeDayMajorIndexList.stream()
+                .collect(Collectors.toMap(MajorIndexDto::indexInfoId, dto -> dto));
+
+        // latest 중에서 before 데이터가 있는 경우만 계산
+        for (MajorIndexDto latest : latestMajorIndexList) {
+            MajorIndexDto before = beforeMap.get(latest.indexInfoId());
+            if (before != null) {
                 BigDecimal currentPrice = latest.closingPrice();
                 BigDecimal beforePrice = before.closingPrice();
-                BigDecimal versus = latest.versus();
-                BigDecimal fluctuationRate = latest.fluctuationRate();
+
+                // 등락/등락률은 DB에서 가져온 값 대신 직접 계산해도 됨
+                BigDecimal versus = currentPrice.subtract(beforePrice);
+                BigDecimal fluctuationRate = beforePrice.compareTo(BigDecimal.ZERO) == 0
+                        ? BigDecimal.ZERO
+                        : versus.divide(beforePrice, 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
 
                 result.add(MajorIndexDataResponse.builder()
                         .indexInfoId(latest.indexInfoId())
@@ -142,29 +146,42 @@ public class BasicDashBoardService implements DashBoardService {
 
         return result;
     }
+
+
 
     /**
      * 주 별 주요 지수
      */
     private List<MajorIndexDataResponse> weeklyMajorIndex(List<Long> favoriteIds) {
-
         // 1. 오늘의 지수 데이터 조회
-        List<MajorIndexDto> latestMajorIndexList = favoriteIds.stream().map(dashBoardRepository::getLatestMajorIndexData).toList();
-        // 2. 일주일 전의 지수 데이터
-        List<MajorIndexDto> beforeWeekMajorIndexList = favoriteIds.stream().map(dashBoardRepository::getBeforeWeekMajorIndexData).toList();
+        List<MajorIndexDto> latestMajorIndexList = favoriteIds.stream()
+                .map(dashBoardRepository::getLatestMajorIndexData)
+                .filter(Objects::nonNull)
+                .toList();
 
-        List<MajorIndexDataResponse> result = new ArrayList<>(); // 없으면 빈 문자열 넘겨주기
-        if(!latestMajorIndexList.isEmpty() && !beforeWeekMajorIndexList.isEmpty()) {
-            for (int i = 0; i < latestMajorIndexList.size(); i++) {
-                MajorIndexDto latest = latestMajorIndexList.get(i);
-                MajorIndexDto before = beforeWeekMajorIndexList.get(i);
+        // 2. 일주일 전의 지수 데이터 조회
+        List<MajorIndexDto> beforeWeekMajorIndexList = favoriteIds.stream()
+                .map(dashBoardRepository::getBeforeWeekMajorIndexData)
+                .filter(Objects::nonNull)
+                .toList();
 
+        List<MajorIndexDataResponse> result = new ArrayList<>();
+
+        // before 데이터 Map으로 변환
+        Map<Long, MajorIndexDto> beforeMap = beforeWeekMajorIndexList.stream()
+                .collect(Collectors.toMap(MajorIndexDto::indexInfoId, dto -> dto));
+
+        // latest 중에서 before 데이터가 있는 경우만 처리
+        for (MajorIndexDto latest : latestMajorIndexList) {
+            MajorIndexDto before = beforeMap.get(latest.indexInfoId());
+            if (before != null) {
                 BigDecimal currentPrice = latest.closingPrice();
                 BigDecimal beforePrice = before.closingPrice();
                 BigDecimal versus = currentPrice.subtract(beforePrice);
                 BigDecimal fluctuationRate = beforePrice.compareTo(BigDecimal.ZERO) == 0
                         ? BigDecimal.ZERO
-                        : versus.divide(beforePrice, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+                        : versus.divide(beforePrice, 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
 
                 result.add(MajorIndexDataResponse.builder()
                         .indexInfoId(latest.indexInfoId())
@@ -180,6 +197,7 @@ public class BasicDashBoardService implements DashBoardService {
 
         return result;
     }
+
 
     /**
      * 월 별 주요 지수
@@ -188,33 +206,40 @@ public class BasicDashBoardService implements DashBoardService {
         // 1. 오늘의 지수 데이터 조회
         List<MajorIndexDto> latestMajorIndexList = favoriteIds.stream().map(dashBoardRepository::getLatestMajorIndexData).toList();
         // 2. 한 달 전의 지수 데이터
-        List<MajorIndexDto> beforeMonthMajorIndexList = favoriteIds.stream().map(dashBoardRepository::getBeforeMonthMajorIndexData).toList();
+        List<MajorIndexDto> beforeMonthMajorIndexList = favoriteIds.stream().map(dashBoardRepository::getBeforeMonthMajorIndexData)
+                .filter(Objects::nonNull)
+                .toList();
 
         List<MajorIndexDataResponse> result = new ArrayList<>(); // 없으면 빈 문자열 넘겨주기
-        if(!latestMajorIndexList.isEmpty() && !beforeMonthMajorIndexList.isEmpty()) {
-            for (int i = 0; i < latestMajorIndexList.size(); i++) {
-                MajorIndexDto latest = latestMajorIndexList.get(i);
-                MajorIndexDto before = beforeMonthMajorIndexList.get(i);
 
-                BigDecimal currentPrice = latest.closingPrice();
-                BigDecimal beforePrice = before.closingPrice();
-                BigDecimal versus = currentPrice.subtract(beforePrice);
-                BigDecimal fluctuationRate = beforePrice.compareTo(BigDecimal.ZERO) == 0
-                        ? BigDecimal.ZERO
-                        : versus.divide(beforePrice, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+        Map<Long, MajorIndexDto> beforeMap = beforeMonthMajorIndexList.stream()
+                .collect(Collectors.toMap(MajorIndexDto::indexInfoId, dto -> dto));
 
-                result.add(MajorIndexDataResponse.builder()
-                        .indexInfoId(latest.indexInfoId())
-                        .indexClassification(latest.indexClassification())
-                        .indexName(latest.indexName())
-                        .versus(versus)
-                        .fluctuationRate(fluctuationRate)
-                        .currentPrice(currentPrice)
-                        .beforePrice(beforePrice)
-                        .build());
+        List<MajorIndexDto> existedLatestMajorIndex = latestMajorIndexList.stream()
+                .filter(latest -> beforeMap.containsKey(latest.indexInfoId())).toList();
+
+        for(MajorIndexDto latest : existedLatestMajorIndex) {
+            for(MajorIndexDto before : beforeMap.values()) {
+                if(latest.indexInfoId().equals(before.indexInfoId())) {
+                    BigDecimal currentPrice = latest.closingPrice();
+                    BigDecimal beforePrice = before.closingPrice();
+                    BigDecimal versus = currentPrice.subtract(beforePrice);
+                    BigDecimal fluctuationRate = beforePrice.compareTo(BigDecimal.ZERO) == 0
+                            ? BigDecimal.ZERO
+                            : versus.divide(beforePrice, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+
+                    result.add(MajorIndexDataResponse.builder()
+                            .indexInfoId(latest.indexInfoId())
+                            .indexClassification(latest.indexClassification())
+                            .indexName(latest.indexName())
+                            .versus(versus)
+                            .fluctuationRate(fluctuationRate)
+                            .currentPrice(currentPrice)
+                            .beforePrice(beforePrice)
+                            .build());
+                }
             }
         }
-
         return result;
     }
 
