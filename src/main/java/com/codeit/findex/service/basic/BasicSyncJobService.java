@@ -17,6 +17,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -130,12 +131,17 @@ public class BasicSyncJobService implements SyncJobService {
     @Override
     public CursorPageResponseSyncJobDto findAll(SyncJobSearchRequest param) {
 
+        if(param.cursor()!= null) {
+            byte[] decodedCursor = Base64.getDecoder().decode(param.cursor());
+            String cursorStr = new String(decodedCursor, StandardCharsets.UTF_8);
+        }
+
         // 1. 쿼리로 데이터 조회
         List<SyncJob> syncJobList = syncJobRepository.search(param);
         long total = syncJobRepository.count(param);
 
         // 2. 다음 페이지 존재여부 확인
-        boolean hasNext = syncJobList.size() > param.size();
+        boolean hasNext = syncJobList.size() == param.size();
         if (hasNext) syncJobList.remove(syncJobList.size() - 1);
 
         List<SyncJobDto> content = syncJobList.stream().map(syncJobMapper::toDto).toList();

@@ -40,7 +40,7 @@ public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom {
         if (param.worker() != null && !param.worker().trim().isBlank()) where.and(syncJob.worker.eq(param.worker()));
         if (param.jobTimeFrom() != null) where.and(syncJob.jobTime.goe(LocalDateTime.from(param.jobTimeFrom())));
         if (param.jobTimeTo() != null) where.and(syncJob.jobTime.loe(LocalDateTime.from(param.jobTimeTo())));
-        if (param.status() != null) where.and(syncJob.result.eq(Boolean.valueOf(param.status())));
+        if (param.status() != null && !param.status().trim().isBlank()) where.and(syncJob.result.eq(Boolean.valueOf(param.status())));
         if (param.idAfter() != null) where.and(syncJob.id.gt(param.idAfter()));
 
         Order order = "desc".equalsIgnoreCase(param.sortDirection()) ? Order.DESC : Order.ASC;
