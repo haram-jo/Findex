@@ -11,16 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SyncJobRepository extends JpaRepository<SyncJob, Long>, SyncJobRepositoryCustom {
-    Optional<SyncJob> findTopByOrderByJobTimeDesc();
 
     Optional<SyncJob> findTopByJobTypeOrderByJobTimeDesc(JobType jobType);
-
-    List<SyncJob> findByJobTypeAndIndexInfoIdAndTargetDateBetween(
-            JobType jobType,
-            Long indexInfoId,
-            LocalDate startDate,
-            LocalDate endDate
-    );
 
     boolean existsByJobTypeAndIndexInfoIdAndTargetDate(
             JobType jobType,

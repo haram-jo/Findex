@@ -204,9 +204,14 @@ public class BasicDashBoardService implements DashBoardService {
      */
     private List<MajorIndexDataResponse> monthlyMajorIndex(List<Long> favoriteIds) {
         // 1. 오늘의 지수 데이터 조회
-        List<MajorIndexDto> latestMajorIndexList = favoriteIds.stream().map(dashBoardRepository::getLatestMajorIndexData).toList();
+        List<MajorIndexDto> latestMajorIndexList = favoriteIds.stream()
+                .map(dashBoardRepository::getLatestMajorIndexData)
+                .filter(Objects::nonNull)
+                .toList();
+
         // 2. 한 달 전의 지수 데이터
-        List<MajorIndexDto> beforeMonthMajorIndexList = favoriteIds.stream().map(dashBoardRepository::getBeforeMonthMajorIndexData)
+        List<MajorIndexDto> beforeMonthMajorIndexList = favoriteIds.stream()
+                .map(dashBoardRepository::getBeforeMonthMajorIndexData)
                 .filter(Objects::nonNull)
                 .toList();
 
