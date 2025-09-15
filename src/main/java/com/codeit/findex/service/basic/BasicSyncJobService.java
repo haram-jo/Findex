@@ -141,7 +141,7 @@ public class BasicSyncJobService implements SyncJobService {
         long total = syncJobRepository.count(param);
 
         // 2. 다음 페이지 존재여부 확인
-        boolean hasNext = syncJobList.size() == param.size();
+        boolean hasNext = syncJobList.size() > param.size();
         if (hasNext) syncJobList.remove(syncJobList.size() - 1);
 
         List<SyncJobDto> content = syncJobList.stream().map(syncJobMapper::toDto).toList();
