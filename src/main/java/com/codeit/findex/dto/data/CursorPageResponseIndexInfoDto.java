@@ -1,7 +1,10 @@
 package com.codeit.findex.dto.data;
 
+import lombok.Builder;
+
 import java.util.List;
 
+@Builder
 public record CursorPageResponseIndexInfoDto(
     List<IndexInfoDto> content, // 페이지 내용
     String nextCursor,          // 다음 페이지 커서

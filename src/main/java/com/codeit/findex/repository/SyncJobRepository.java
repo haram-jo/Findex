@@ -19,4 +19,11 @@ public interface SyncJobRepository extends JpaRepository<SyncJob, Long>, SyncJob
             Long indexInfoId,
             LocalDate targetDate
     );
+
+    Optional<SyncJob> findByIndexInfoIdAndTargetDate(Long indexInfoId, LocalDate targetDate);
+
+    List<SyncJob> findByJobType(JobType jobType);
+
+    List<SyncJob> findByJobTypeAndIndexInfo_IdIn(JobType jobType, List<Long> indexInfoIds);
+
 }

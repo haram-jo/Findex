@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Getter @Builder
+@Getter @Builder(toBuilder = true)
 @NoArgsConstructor @AllArgsConstructor
 @Entity
 @Table(name = "sync_jobs")
@@ -33,6 +33,13 @@ public class SyncJob {
     private LocalDateTime jobTime;
 
     private Boolean result;
+
+    public SyncJob update(LocalDateTime jobTime, String worker, Boolean result) {
+        this.jobTime = jobTime;
+        this.worker = worker;
+        this.result = result;
+        return this;
+    }
 
     public void setResult(ResultType resultType) {
         this.result = resultType.toBoolean();

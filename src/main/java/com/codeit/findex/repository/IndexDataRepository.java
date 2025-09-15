@@ -1,6 +1,7 @@
 package com.codeit.findex.repository;
 
 import com.codeit.findex.entity.IndexData;
+import com.codeit.findex.entity.IndexInfo;
 import com.codeit.findex.repository.custom.IndexDataRepositoryCustom;
 import java.time.LocalDate;
 import java.util.List;
@@ -42,4 +43,6 @@ public interface IndexDataRepository extends JpaRepository<IndexData, Long>, Ind
 
     @Query("select distinct d.indexInfo.id from IndexData d")
     List<Long> findDistinctIndexInfoIds();
+
+    List<IndexData> findByIndexInfo_IdIn(List<Long> indexInfoIds);
 }

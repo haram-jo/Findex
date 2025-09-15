@@ -5,6 +5,8 @@ import com.codeit.findex.dto.request.SyncJobSearchRequest;
 import com.codeit.findex.entity.QSyncJob;
 import com.codeit.findex.entity.SyncJob;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -31,42 +33,32 @@ public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom {
         // 1. where 조건 빌드
         BooleanBuilder where = new BooleanBuilder();
 
-        if (param.jobType() != null) {
-            where.and(syncJob.jobType.eq(param.jobType()));
-        }
-        if (param.indexInfoId() != null) {
-            where.and(syncJob.indexInfo.id.eq(param.indexInfoId()));
-        }
+        if (param.jobType() != null) where.and(syncJob.jobType.eq(param.jobType()));
+        if (param.indexInfoId() != null) where.and(syncJob.indexInfo.id.eq(param.indexInfoId()));
+        if (param.baseDateFrom() != null) where.and(syncJob.targetDate.goe(param.baseDateFrom()));
+        if (param.baseDateTo() != null) where.and(syncJob.targetDate.loe(param.baseDateTo()));
+        if (param.worker() != null && !param.worker().trim().isBlank()) where.and(syncJob.worker.eq(param.worker()));
+        if (param.jobTimeFrom() != null) where.and(syncJob.jobTime.goe(LocalDateTime.from(param.jobTimeFrom())));
+        if (param.jobTimeTo() != null) where.and(syncJob.jobTime.loe(LocalDateTime.from(param.jobTimeTo())));
+        if (param.status() != null) where.and(syncJob.result.eq(Boolean.valueOf(param.status())));
+        if (param.idAfter() != null) where.and(syncJob.id.gt(param.idAfter()));
 
-        if (param.baseDateFrom() != null && param.baseDateTo() != null) {
-            where.and(syncJob.targetDate.between(param.baseDateFrom(), param.baseDateTo()));
-        } else if (param.baseDateFrom() != null) {
-            where.and(syncJob.targetDate.goe(param.baseDateFrom()));
-        } else if (param.baseDateTo() != null) {
-            where.and(syncJob.targetDate.loe(param.baseDateTo()));
-        }
+        Order order = "desc".equalsIgnoreCase(param.sortDirection()) ? Order.DESC : Order.ASC;
+        OrderSpecifier<?> orderSpecifier;
 
-        if (param.worker() != null && !param.worker().trim().isBlank() ) {
-            where.and(syncJob.worker.eq(param.worker()));
-        }
-        if (param.jobTimeFrom() != null) {
-            where.and(syncJob.jobTime.goe(LocalDateTime.from(param.jobTimeFrom())));
-        }
-        if (param.jobTimeTo() != null) {
-            where.and(syncJob.jobTime.loe(LocalDateTime.from(param.jobTimeTo())));
-        }
-        if (param.status() != null) {
-            where.and(syncJob.result.eq(Boolean.valueOf(param.status())));
-        }
-        if (param.idAfter() != null) {
-            where.and(syncJob.id.gt(param.idAfter()));
+        switch (param.sortDirection()) {
+            case "targetDate" -> orderSpecifier = new OrderSpecifier<>(order, syncJob.targetDate);
+            case "jobTime" -> orderSpecifier = new OrderSpecifier<>(order, syncJob.jobTime);
+            default -> orderSpecifier = new OrderSpecifier<>(Order.ASC, syncJob.jobTime); // fallback
         }
 
         return queryFactory.selectFrom(syncJob)
                 .where(where)
-                .join(syncJob.indexInfo).fetchJoin()
+                .orderBy(orderSpecifier)
+                .limit(param.size() != null ? param.size() : 0)
                 .fetch();
     }
+
 
 
     @Override

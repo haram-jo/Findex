@@ -16,9 +16,12 @@ import jakarta.persistence.EntityNotFoundException;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -87,21 +90,26 @@ public class BasicIndexDataService implements IndexDataService {
 
     @Override
     public CursorPageResponseIndexDataDto searchIndexData(IndexDataSearchCondition condition) {
-        List<IndexData> results = indexDataRepository.search(condition);
-        long totalElements = indexDataRepository.count(condition);
 
-        boolean hasNext = results.size() > condition.size();
-        if (hasNext) {
-            results.remove(results.size() - 1);
+        if(condition.cursor()!= null) {
+            byte[] decodedCursor = Base64.getDecoder().decode(condition.cursor());
+            String cursorStr = new String(decodedCursor, StandardCharsets.UTF_8);
         }
 
-        List<IndexDataDto> content = indexDataMapper.toDtoList(results);
+        // 쿼리로 데이터 조회
+        List<IndexData> indexDataList = indexDataRepository.search(condition);
+        long totalElements = indexDataRepository.count(condition);
+
+        boolean hasNext = indexDataList.size() == condition.size();
+        if (hasNext) indexDataList.remove(indexDataList.size() - 1);
+
+        List<IndexDataDto> content = indexDataList.stream().map(indexDataMapper::toDto).toList();
 
         String nextCursor = null;
         Long nextIdAfter = null;
 
         if (hasNext) {
-            IndexData lastItem = results.get(results.size() - 1);
+            IndexData lastItem = indexDataList.get(indexDataList.size() - 1);
             String cursorJson = String.format("{\"id\":%d}", lastItem.getId());
             nextCursor = Base64.getEncoder().encodeToString(cursorJson.getBytes());
             nextIdAfter = lastItem.getId();
