@@ -52,10 +52,12 @@ public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom {
             default -> orderSpecifier = new OrderSpecifier<>(Order.ASC, syncJob.jobTime); // fallback
         }
 
+        int limit = (param.size() != null ? param.size() : 10) + 1;
+
         return queryFactory.selectFrom(syncJob)
                 .where(where)
                 .orderBy(orderSpecifier)
-                .limit(param.size() != null ? param.size() : 0)
+                .limit(limit)
                 .fetch();
     }
 
