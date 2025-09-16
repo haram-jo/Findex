@@ -1,0 +1,486 @@
+폴더 PATH의 목록입니다.
+볼륨 일련 번호는 8642-02C4입니다.
+C:.
+│  .dockerignore
+│  .env
+│  .gitattributes
+│  .gitignore
+│  build.gradle
+│  Dockerfile
+│  gradlew
+│  gradlew.bat
+│  project-structure.txt
+│  README.md
+│  settings.gradle
+│  
+├─.github
+│  │  CODEOWNERS
+│  │  pull_request_template.md
+│  │  
+│  └─ISSUE_TEMPLATE
+│          findex-프로젝트의-이슈-템플릿-입니다.md
+│          
+├─.gradle
+│  │  file-system.probe
+│  │  
+│  ├─8.14.3
+│  │  │  gc.properties
+│  │  │  
+│  │  ├─checksums
+│  │  │      checksums.lock
+│  │  │      md5-checksums.bin
+│  │  │      sha1-checksums.bin
+│  │  │      
+│  │  ├─executionHistory
+│  │  │      executionHistory.bin
+│  │  │      executionHistory.lock
+│  │  │      
+│  │  ├─expanded
+│  │  ├─fileChanges
+│  │  │      last-build.bin
+│  │  │      
+│  │  ├─fileHashes
+│  │  │      fileHashes.bin
+│  │  │      fileHashes.lock
+│  │  │      resourceHashesCache.bin
+│  │  │      
+│  │  └─vcsMetadata
+│  ├─buildOutputCleanup
+│  │      buildOutputCleanup.lock
+│  │      cache.properties
+│  │      outputFiles.bin
+│  │      
+│  └─vcs-1
+│          gc.properties
+│          
+├─.idea
+│  │  .gitignore
+│  │  .name
+│  │  compiler.xml
+│  │  gradle.xml
+│  │  misc.xml
+│  │  modules.xml
+│  │  vcs.xml
+│  │  workspace.xml
+│  │  
+│  └─modules
+│          findex.main.iml
+│          
+├─build
+│  │  resolvedMainClassName
+│  │  
+│  ├─classes
+│  │  └─java
+│  │      ├─main
+│  │      │  └─com
+│  │      │      └─codeit
+│  │      │          └─findex
+│  │      │              │  FindexApplication.class
+│  │      │              │  
+│  │      │              ├─client
+│  │      │              │      MarketIndexApiClient.class
+│  │      │              │      
+│  │      │              ├─config
+│  │      │              │      QuerydslConfig.class
+│  │      │              │      SchedulingConfig.class
+│  │      │              │      WebClientConfig.class
+│  │      │              │      
+│  │      │              ├─controller
+│  │      │              │      AutoSyncController.class
+│  │      │              │      IndexDataController.class
+│  │      │              │      IndexInfoController.class
+│  │      │              │      SyncJobController.class
+│  │      │              │      
+│  │      │              ├─dto
+│  │      │              │  ├─data
+│  │      │              │  │      AutoSyncConfigDto.class
+│  │      │              │  │      ChartDataPoint.class
+│  │      │              │  │      ChartDataRow.class
+│  │      │              │  │      ChartPeriodType.class
+│  │      │              │  │      CursorPageResponseAutoSyncConfigDto.class
+│  │      │              │  │      CursorPageResponseIndexDataDto.class
+│  │      │              │  │      CursorPageResponseIndexInfoDto.class
+│  │      │              │  │      CursorPageResponseSyncJobDto$CursorPageResponseSyncJobDtoBuilder.class
+│  │      │              │  │      CursorPageResponseSyncJobDto.class
+│  │      │              │  │      IndexChartDto.class
+│  │      │              │  │      IndexDataDto$IndexDataDtoBuilder.class
+│  │      │              │  │      IndexDataDto.class
+│  │      │              │  │      IndexInfoDto.class
+│  │      │              │  │      IndexInfoSummaryDto.class
+│  │      │              │  │      IndexInfoUnique$IndexInfoUniqueBuilder.class
+│  │      │              │  │      IndexInfoUnique.class
+│  │      │              │  │      MajorIndexDto$MajorIndexDtoBuilder.class
+│  │      │              │  │      MajorIndexDto.class
+│  │      │              │  │      RankedIndexPerformanceDto$RankedIndexPerformanceDtoBuilder.class
+│  │      │              │  │      RankedIndexPerformanceDto.class
+│  │      │              │  │      SyncJobDto$SyncJobDtoBuilder.class
+│  │      │              │  │      SyncJobDto.class
+│  │      │              │  │      
+│  │      │              │  ├─request
+│  │      │              │  │      AutoSyncConfigUpdateRequest.class
+│  │      │              │  │      IndexDataCreateRequest.class
+│  │      │              │  │      IndexDataSearchCondition.class
+│  │      │              │  │      IndexDataSyncRequest.class
+│  │      │              │  │      IndexDataUpdateRequest.class
+│  │      │              │  │      IndexInfoCreateRequest.class
+│  │      │              │  │      IndexInfoUpdateRequest.class
+│  │      │              │  │      SyncJobSearchRequest.class
+│  │      │              │  │      
+│  │      │              │  └─response
+│  │      │              │          ErrorResponse.class
+│  │      │              │          IndexDataRank$IndexDataRankBuilder.class
+│  │      │              │          IndexDataRank.class
+│  │      │              │          MajorIndexDataResponse$MajorIndexDataResponseBuilder.class
+│  │      │              │          MajorIndexDataResponse.class
+│  │      │              │          MarketIndexApiResponse$Body.class
+│  │      │              │          MarketIndexApiResponse$Item.class
+│  │      │              │          MarketIndexApiResponse$Items.class
+│  │      │              │          MarketIndexApiResponse$ResponseWrapper.class
+│  │      │              │          MarketIndexApiResponse.class
+│  │      │              │          
+│  │      │              ├─entity
+│  │      │              │      AutoSync$AutoSyncBuilder.class
+│  │      │              │      AutoSync.class
+│  │      │              │      IndexData$IndexDataBuilder.class
+│  │      │              │      IndexData.class
+│  │      │              │      IndexInfo$IndexInfoBuilder.class
+│  │      │              │      IndexInfo.class
+│  │      │              │      JobType.class
+│  │      │              │      QAutoSync.class
+│  │      │              │      QIndexData.class
+│  │      │              │      QIndexInfo.class
+│  │      │              │      QSyncJob.class
+│  │      │              │      ResultType.class
+│  │      │              │      SourceType.class
+│  │      │              │      SyncJob$SyncJobBuilder.class
+│  │      │              │      SyncJob.class
+│  │      │              │      
+│  │      │              ├─exception
+│  │      │              │      GlobalExceptionHandler.class
+│  │      │              │      
+│  │      │              ├─mapper
+│  │      │              │      AutoSyncMapper.class
+│  │      │              │      AutoSyncMapperImpl.class
+│  │      │              │      IndexDataMapper.class
+│  │      │              │      IndexDataMapperImpl.class
+│  │      │              │      IndexInfoMapper.class
+│  │      │              │      IndexInfoMapperImpl.class
+│  │      │              │      SyncJobMapper.class
+│  │      │              │      SyncJobMapperImpl.class
+│  │      │              │      
+│  │      │              ├─repository
+│  │      │              │  │  AutoSyncRepository.class
+│  │      │              │  │  DashBoardRepository.class
+│  │      │              │  │  IndexDataRepository.class
+│  │      │              │  │  IndexInfoRepository.class
+│  │      │              │  │  SyncJobRepository.class
+│  │      │              │  │  
+│  │      │              │  ├─custom
+│  │      │              │  │      AutoSyncRepositoryCustom.class
+│  │      │              │  │      AutoSyncRepositoryImpl.class
+│  │      │              │  │      DashBoardRepositoryCustom.class
+│  │      │              │  │      DashBoardRepositoryImpl$1.class
+│  │      │              │  │      DashBoardRepositoryImpl.class
+│  │      │              │  │      IndexDataRepositoryCustom.class
+│  │      │              │  │      IndexDataRepositoryImpl.class
+│  │      │              │  │      IndexInfoRepositoryCustom.class
+│  │      │              │  │      IndexInfoRepositoryImpl.class
+│  │      │              │  │      SyncJobRepositoryCustom.class
+│  │      │              │  │      SyncJobRepositoryImpl.class
+│  │      │              │  │      
+│  │      │              │  └─schedular
+│  │      │              │          AnchorSyncJobRepository.class
+│  │      │              │          
+│  │      │              ├─schedular
+│  │      │              │      IndexDataAutoSyncScheduler.class
+│  │      │              │      
+│  │      │              └─service
+│  │      │                  │  AutoSyncService.class
+│  │      │                  │  DashBoardService.class
+│  │      │                  │  IndexDataService.class
+│  │      │                  │  IndexInfoService.class
+│  │      │                  │  SyncJobService.class
+│  │      │                  │  
+│  │      │                  ├─basic
+│  │      │                  │      BasicAutoSyncService.class
+│  │      │                  │      BasicDashBoardService.class
+│  │      │                  │      BasicIndexDataService.class
+│  │      │                  │      BasicIndexInfoService.class
+│  │      │                  │      BasicSyncJobService.class
+│  │      │                  │      IndexDataSyncService.class
+│  │      │                  │      IndexInfoSyncService.class
+│  │      │                  │      
+│  │      │                  └─schedular
+│  │      │                          AnchorService.class
+│  │      │                          
+│  │      └─test
+│  │          └─com
+│  │              └─codeit
+│  │                  └─findex
+│  │                          FindexApplicationTests.class
+│  │                          IndexInfoServiceTest.class
+│  │                          
+│  ├─generated
+│  │  ├─querydsl
+│  │  │  └─com
+│  │  │      └─codeit
+│  │  │          └─findex
+│  │  │              ├─entity
+│  │  │              │      QAutoSync.java
+│  │  │              │      QIndexData.java
+│  │  │              │      QIndexInfo.java
+│  │  │              │      QSyncJob.java
+│  │  │              │      
+│  │  │              └─mapper
+│  │  │                      AutoSyncMapperImpl.java
+│  │  │                      IndexDataMapperImpl.java
+│  │  │                      IndexInfoMapperImpl.java
+│  │  │                      SyncJobMapperImpl.java
+│  │  │                      
+│  │  └─sources
+│  │      ├─annotationProcessor
+│  │      │  └─java
+│  │      │      ├─main
+│  │      │      │  └─com
+│  │      │      │      └─codeit
+│  │      │      │          └─findex
+│  │      │      │              └─mapper
+│  │      │      │                      AutoSyncMapperImpl.java
+│  │      │      │                      IndexDataMapperImpl.java
+│  │      │      │                      IndexInfoMapperImpl.java
+│  │      │      │                      SyncJobMapperImpl.java
+│  │      │      │                      
+│  │      │      └─test
+│  │      └─headers
+│  │          └─java
+│  │              ├─main
+│  │              └─test
+│  ├─reports
+│  │  ├─problems
+│  │  │      problems-report.html
+│  │  │      
+│  │  └─tests
+│  │      └─test
+│  │          │  index.html
+│  │          │  
+│  │          ├─classes
+│  │          │      com.codeit.findex.IndexInfoServiceTest.html
+│  │          │      
+│  │          ├─css
+│  │          │      base-style.css
+│  │          │      style.css
+│  │          │      
+│  │          ├─js
+│  │          │      report.js
+│  │          │      
+│  │          └─packages
+│  │                  com.codeit.findex.html
+│  │                  
+│  ├─resources
+│  │  └─main
+│  │      │  application.yml
+│  │      │  schema.sql
+│  │      │  
+│  │      └─static
+│  │          │  favicon.ico
+│  │          │  index.html
+│  │          │  
+│  │          └─assets
+│  │                  index-CGZC7fCi.js
+│  │                  index-Dtn62Xmo.css
+│  │                  
+│  ├─test-results
+│  │  └─test
+│  │      │  TEST-com.codeit.findex.IndexInfoServiceTest.xml
+│  │      │  
+│  │      └─binary
+│  │              output.bin
+│  │              output.bin.idx
+│  │              results.bin
+│  │              
+│  └─tmp
+│      ├─compileJava
+│      │  │  previous-compilation-data.bin
+│      │  │  
+│      │  └─compileTransaction
+│      │      ├─backup-dir
+│      │      └─stash-dir
+│      │              AutoSyncMapperImpl.class.uniqueId5
+│      │              AutoSyncMapperImpl.java.uniqueId0
+│      │              IndexDataMapperImpl.class.uniqueId8
+│      │              IndexDataMapperImpl.java.uniqueId4
+│      │              IndexInfoMapperImpl.class.uniqueId1
+│      │              IndexInfoMapperImpl.java.uniqueId6
+│      │              QSyncJob.class.uniqueId7
+│      │              QSyncJob.java.uniqueId2
+│      │              SyncJobMapperImpl.class.uniqueId3
+│      │              SyncJobMapperImpl.java.uniqueId9
+│      │              
+│      ├─compileTestJava
+│      │      previous-compilation-data.bin
+│      │      
+│      └─test
+├─gradle
+│  └─wrapper
+│          gradle-wrapper.jar
+│          gradle-wrapper.properties
+│          
+├─images
+│      Discord.png
+│      Docker.png
+│      Figma.png
+│      Git.png
+│      GitHub.png
+│      H2Database.png
+│      JPQL.png
+│      MapStruct.png
+│      Notion.png
+│      PostgreSQL.png
+│      Postman.png
+│      QueryDSL.png
+│      railway.png
+│      React.png
+│      SpringBoot.png
+│      SpringDokOpenAPI.png
+│      SpringJPA.png
+│      Swagger.png
+│      
+└─src
+    ├─main
+    │  ├─java
+    │  │  └─com
+    │  │      └─codeit
+    │  │          └─findex
+    │  │              │  FindexApplication.java
+    │  │              │  
+    │  │              ├─client
+    │  │              │      MarketIndexApiClient.java
+    │  │              │      
+    │  │              ├─config
+    │  │              │      QuerydslConfig.java
+    │  │              │      SchedulingConfig.java
+    │  │              │      WebClientConfig.java
+    │  │              │      
+    │  │              ├─controller
+    │  │              │      AutoSyncController.java
+    │  │              │      IndexDataController.java
+    │  │              │      IndexInfoController.java
+    │  │              │      SyncJobController.java
+    │  │              │      
+    │  │              ├─dto
+    │  │              │  ├─data
+    │  │              │  │      AutoSyncConfigDto.java
+    │  │              │  │      ChartDataPoint.java
+    │  │              │  │      ChartDataRow.java
+    │  │              │  │      ChartPeriodType.java
+    │  │              │  │      CursorPageResponseAutoSyncConfigDto.java
+    │  │              │  │      CursorPageResponseIndexDataDto.java
+    │  │              │  │      CursorPageResponseIndexInfoDto.java
+    │  │              │  │      CursorPageResponseSyncJobDto.java
+    │  │              │  │      IndexChartDto.java
+    │  │              │  │      IndexDataDto.java
+    │  │              │  │      IndexInfoDto.java
+    │  │              │  │      IndexInfoSummaryDto.java
+    │  │              │  │      IndexInfoUnique.java
+    │  │              │  │      MajorIndexDto.java
+    │  │              │  │      RankedIndexPerformanceDto.java
+    │  │              │  │      SyncJobDto.java
+    │  │              │  │      
+    │  │              │  ├─request
+    │  │              │  │      AutoSyncConfigUpdateRequest.java
+    │  │              │  │      IndexDataCreateRequest.java
+    │  │              │  │      IndexDataSearchCondition.java
+    │  │              │  │      IndexDataSyncRequest.java
+    │  │              │  │      IndexDataUpdateRequest.java
+    │  │              │  │      IndexInfoCreateRequest.java
+    │  │              │  │      IndexInfoSearchRequest.java
+    │  │              │  │      IndexInfoUpdateRequest.java
+    │  │              │  │      SyncJobSearchRequest.java
+    │  │              │  │      
+    │  │              │  └─response
+    │  │              │          ErrorResponse.java
+    │  │              │          IndexDataRank.java
+    │  │              │          MajorIndexDataResponse.java
+    │  │              │          MarketIndexApiResponse.java
+    │  │              │          
+    │  │              ├─entity
+    │  │              │      AutoSync.java
+    │  │              │      IndexData.java
+    │  │              │      IndexInfo.java
+    │  │              │      JobType.java
+    │  │              │      ResultType.java
+    │  │              │      SourceType.java
+    │  │              │      SyncJob.java
+    │  │              │      
+    │  │              ├─exception
+    │  │              │      GlobalExceptionHandler.java
+    │  │              │      
+    │  │              ├─mapper
+    │  │              │      AutoSyncMapper.java
+    │  │              │      IndexDataMapper.java
+    │  │              │      IndexInfoMapper.java
+    │  │              │      SyncJobMapper.java
+    │  │              │      
+    │  │              ├─repository
+    │  │              │  │  AutoSyncRepository.java
+    │  │              │  │  DashBoardRepository.java
+    │  │              │  │  IndexDataRepository.java
+    │  │              │  │  IndexInfoRepository.java
+    │  │              │  │  SyncJobRepository.java
+    │  │              │  │  
+    │  │              │  ├─custom
+    │  │              │  │      AutoSyncRepositoryCustom.java
+    │  │              │  │      AutoSyncRepositoryImpl.java
+    │  │              │  │      DashBoardRepositoryCustom.java
+    │  │              │  │      DashBoardRepositoryImpl.java
+    │  │              │  │      IndexDataRepositoryCustom.java
+    │  │              │  │      IndexDataRepositoryImpl.java
+    │  │              │  │      IndexInfoRepositoryCustom.java
+    │  │              │  │      IndexInfoRepositoryImpl.java
+    │  │              │  │      SyncJobRepositoryCustom.java
+    │  │              │  │      SyncJobRepositoryImpl.java
+    │  │              │  │      
+    │  │              │  └─schedular
+    │  │              │          AnchorSyncJobRepository.java
+    │  │              │          
+    │  │              ├─schedular
+    │  │              │      IndexDataAutoSyncScheduler.java
+    │  │              │      
+    │  │              └─service
+    │  │                  │  AutoSyncService.java
+    │  │                  │  DashBoardService.java
+    │  │                  │  IndexDataService.java
+    │  │                  │  IndexInfoService.java
+    │  │                  │  SyncJobService.java
+    │  │                  │  
+    │  │                  ├─basic
+    │  │                  │      BasicAutoSyncService.java
+    │  │                  │      BasicDashBoardService.java
+    │  │                  │      BasicIndexDataService.java
+    │  │                  │      BasicIndexInfoService.java
+    │  │                  │      BasicSyncJobService.java
+    │  │                  │      IndexDataSyncService.java
+    │  │                  │      IndexInfoSyncService.java
+    │  │                  │      
+    │  │                  └─schedular
+    │  │                          AnchorService.java
+    │  │                          
+    │  └─resources
+    │      │  application.yml
+    │      │  schema.sql
+    │      │  
+    │      └─static
+    │          │  favicon.ico
+    │          │  index.html
+    │          │  
+    │          └─assets
+    │                  index-CGZC7fCi.js
+    │                  index-Dtn62Xmo.css
+    │                  
+    └─test
+        └─java
+            └─com
+                └─codeit
+                    └─findex
+                            FindexApplicationTests.java
+                            
