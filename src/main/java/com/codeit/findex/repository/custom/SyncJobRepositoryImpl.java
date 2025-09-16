@@ -2,115 +2,93 @@ package com.codeit.findex.repository.custom;
 
 import com.codeit.findex.dto.data.SyncJobDto;
 import com.codeit.findex.dto.request.SyncJobSearchRequest;
-import com.codeit.findex.entity.ResultType;
+import com.codeit.findex.entity.QSyncJob;
 import com.codeit.findex.entity.SyncJob;
-import com.codeit.findex.service.basic.BasicSyncJobService;
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
 public class SyncJobRepositoryImpl implements SyncJobRepositoryCustom {
 
     private final EntityManager em;
+    private final JPAQueryFactory queryFactory;
+
 
     @Override
     public List<SyncJob> search(SyncJobSearchRequest param) {
-        StringBuilder jpqlBuilder = new StringBuilder("SELECT s FROM SyncJob s WHERE 1=1");
 
-        // 동적 조건
-        if (param.jobType() != null) {
-            jpqlBuilder.append(" AND s.jobType = :jobType");
-        }
-        if (param.indexInfoId() != null) {
-            jpqlBuilder.append(" AND s.indexInfo.id = :indexInfoId");
-        }
-        if (param.baseDateFrom() != null) {
-            jpqlBuilder.append(" AND s.targetDate >= :baseDateFrom");
-        }
-        if (param.baseDateTo() != null) {
-            jpqlBuilder.append(" AND s.targetDate <= :baseDateTo");
-        }
-        if (param.worker() != null && !param.worker().isBlank()) {
-            jpqlBuilder.append(" AND s.worker = :worker");
-        }
-        if (param.jobTimeFrom() != null) {
-            jpqlBuilder.append(" AND s.jobTime >= :jobTimeFrom");
-        }
-        if (param.jobTimeTo() != null) {
-            jpqlBuilder.append(" AND s.jobTime <= :jobTimeTo");
-        }
-        if (param.status() != null && !param.status().isBlank()) {
-            jpqlBuilder.append(" AND s.result = :status");
-        }
-        if (param.idAfter() != null) {
-            jpqlBuilder.append(" AND s.id > :idAfter");
+        QSyncJob syncJob = QSyncJob.syncJob;
+
+        // 1. where 조건 빌드
+        BooleanBuilder where = new BooleanBuilder();
+
+        if (param.jobType() != null) where.and(syncJob.jobType.eq(param.jobType()));
+        if (param.indexInfoId() != null) where.and(syncJob.indexInfo.id.eq(param.indexInfoId()));
+        if (param.baseDateFrom() != null) where.and(syncJob.targetDate.goe(param.baseDateFrom()));
+        if (param.baseDateTo() != null) where.and(syncJob.targetDate.loe(param.baseDateTo()));
+        if (param.worker() != null && !param.worker().trim().isBlank()) where.and(syncJob.worker.eq(param.worker()));
+        if (param.jobTimeFrom() != null) where.and(syncJob.jobTime.goe(LocalDateTime.from(param.jobTimeFrom())));
+        if (param.jobTimeTo() != null) where.and(syncJob.jobTime.loe(LocalDateTime.from(param.jobTimeTo())));
+        if (param.status() != null && !param.status().trim().isBlank()) where.and(syncJob.result.eq(Boolean.valueOf(param.status())));
+        if (param.idAfter() != null) where.and(syncJob.id.gt(param.idAfter()));
+
+        Order order = "desc".equalsIgnoreCase(param.sortDirection()) ? Order.DESC : Order.ASC;
+        OrderSpecifier<?> orderSpecifier;
+
+        switch (param.sortDirection()) {
+            case "targetDate" -> orderSpecifier = new OrderSpecifier<>(order, syncJob.targetDate);
+            case "jobTime" -> orderSpecifier = new OrderSpecifier<>(order, syncJob.jobTime);
+            default -> orderSpecifier = new OrderSpecifier<>(Order.ASC, syncJob.jobTime); // fallback
         }
 
-        // 정렬
-        String sortField = param.sortField();
-        String sortDirection = param.sortDirection().equalsIgnoreCase("asc") ? "ASC" : "DESC";
-        jpqlBuilder.append(" ORDER BY s.").append(sortField).append(" ").append(sortDirection);
+        int limit = (param.size() != null ? param.size() : 10) + 1;
 
-        // 쿼리 생성
-        TypedQuery<SyncJob> query = em.createQuery(jpqlBuilder.toString(), SyncJob.class);
-
-        // 파라미터 바인딩 (조건문과 반드시 동일하게 묶음)
-        if (param.jobType() != null) {
-            query.setParameter("jobType", param.jobType());
-        }
-        if (param.indexInfoId() != null) {
-            query.setParameter("indexInfoId", param.indexInfoId());
-        }
-        if (param.baseDateFrom() != null) {
-            query.setParameter("baseDateFrom", param.baseDateFrom());
-        }
-        if (param.baseDateTo() != null) {
-            query.setParameter("baseDateTo", param.baseDateTo());
-        }
-        if (param.worker() != null && !param.worker().isBlank()) {
-            query.setParameter("worker", param.worker());
-        }
-        if (param.jobTimeFrom() != null) {
-            query.setParameter("jobTimeFrom", param.jobTimeFrom());
-        }
-        if (param.jobTimeTo() != null) {
-            query.setParameter("jobTimeTo", param.jobTimeTo());
-        }
-        if (param.status() != null && !param.status().isBlank()) {
-            query.setParameter("status", ResultType.valueOf(param.status().toUpperCase()).toBoolean());
-        }
-        if (param.idAfter() != null) {
-            query.setParameter("idAfter", param.idAfter());
-        }
-
-        query.setMaxResults(param.size() + 1); // 페이지네이션 (다음 페이지 여부 확인용)
-        return query.getResultList();
+        return queryFactory.selectFrom(syncJob)
+                .where(where)
+                .orderBy(orderSpecifier)
+                .limit(limit)
+                .fetch();
     }
+
 
 
     @Override
     public long count(SyncJobSearchRequest param) {
+        QSyncJob syncJob = QSyncJob.syncJob;
 
-        StringBuilder jpqlBuilder = new StringBuilder("SELECT count(d) FROM SyncJob d WHERE 1=1");
+        BooleanBuilder where = new BooleanBuilder();
 
-        if(param.indexInfoId() != null) jpqlBuilder.append(" AND d.indexInfo.id = :indexInfoId");
-        if(param.baseDateFrom() != null) jpqlBuilder.append(" AND d.targetDate >= :baseDateFrom");
-        if(param.baseDateTo() != null) jpqlBuilder.append(" AND d.targetDate <= :baseDateTo");
+        if (param.indexInfoId() != null) {
+            where.and(syncJob.indexInfo.id.eq(param.indexInfoId()));
+        }
 
-        // 최종 쿼리
-        TypedQuery<Long> query = em.createQuery(jpqlBuilder.toString(), Long.class);
+        if (param.baseDateFrom() != null && param.baseDateTo() != null) {
+            // 두 값이 모두 있으면 between
+            where.and(syncJob.targetDate.between(param.baseDateFrom(), param.baseDateTo()));
+        } else if (param.baseDateFrom() != null) {
+            where.and(syncJob.targetDate.goe(param.baseDateFrom()));
+        } else if (param.baseDateTo() != null) {
+            where.and(syncJob.targetDate.loe(param.baseDateTo()));
+        }
 
-        if(param.indexInfoId() != null) query.setParameter("indexInfoId", param.indexInfoId());
-        if(param.baseDateFrom() != null) query.setParameter("baseDateFrom", param.baseDateFrom());
-        if(param.baseDateTo() != null) query.setParameter("baseDateTo", param.baseDateTo());
-
-        return query.getSingleResult();
+        return Optional.ofNullable(queryFactory
+                .select(syncJob.id.countDistinct())
+                .from(syncJob)
+                .where(where)
+                .fetchOne()).orElse(0L);
     }
+
 
     @Override
     public void saveAllInBatch(List<SyncJobDto> syncJobs) {

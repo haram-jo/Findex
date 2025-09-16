@@ -1,11 +1,13 @@
 package com.codeit.findex.service.basic;
 
-import com.codeit.findex.client.MarketIndexApiClient;
 import com.codeit.findex.dto.data.CursorPageResponseSyncJobDto;
 import com.codeit.findex.dto.data.SyncJobDto;
 import com.codeit.findex.dto.request.IndexDataSyncRequest;
 import com.codeit.findex.dto.request.SyncJobSearchRequest;
-import com.codeit.findex.entity.*;
+import com.codeit.findex.entity.IndexData;
+import com.codeit.findex.entity.IndexInfo;
+import com.codeit.findex.entity.JobType;
+import com.codeit.findex.entity.SyncJob;
 import com.codeit.findex.mapper.SyncJobMapper;
 import com.codeit.findex.repository.IndexDataRepository;
 import com.codeit.findex.repository.IndexInfoRepository;
@@ -15,104 +17,124 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 public class BasicSyncJobService implements SyncJobService {
 
-    private final IndexDataRepository indexDataRepository;
     private final IndexInfoRepository indexInfoRepository;
-    private final IndexInfoSyncService indexInfoSyncService;
-    private final IndexDataSyncService indexDataSyncService;
     private final SyncJobRepository syncJobRepository;
     private final SyncJobMapper syncJobMapper;
+    private final IndexDataRepository indexDataRepository;
 
-    /**
-     * 지수 정보
-     * @param workerId 작성자의 IP 주소
-     */
+
     @Override
     @Transactional
-    public List<SyncJobDto> createIndexInfoSyncJob(String workerId) {
-        // 1. 지수 정보 DB에 저장
-        indexInfoSyncService.createIndexInfos();
-
-        // 2. 연동 정보 DB에 저장
-        List<SyncJobDto> syncJobDtos = createSyncJobsOfIndexInfo(workerId);
-
-        return syncJobDtos;
-    }
-
-    private List<SyncJobDto> createSyncJobsOfIndexInfo(String workerId) {
-        List<SyncJobDto> syncJobRegistry = new ArrayList<>(); // SyncJob 테이블에 최종적으로 저장되는 데이터 목록
+    public List<SyncJobDto> createSyncJobsOfIndexInfo(String workerId) {
         List<IndexInfo> syncedIndexInfos = indexInfoRepository.findAll();
+        List<SyncJob> existingJobs = syncJobRepository.findByJobType(JobType.INDEX_INFO);
+
+        // 기존 job을 indexInfo.id 기준으로 Map 변환
+        Map<Long, SyncJob> existingMap = existingJobs.stream()
+                .collect(Collectors.toMap(job -> job.getIndexInfo().getId(), job -> job));
+
+        List<SyncJob> jobsToSave = new ArrayList<>();
 
         for (IndexInfo indexInfo : syncedIndexInfos) {
-            SyncJobDto newSyncJob = SyncJobDto.builder()
-                    .indexInfoId(indexInfo.getId())
-                    .jobType(JobType.INDEX_INFO)
-                    .jobTime(LocalDateTime.now()) // 작업 일시
-                    .targetDate(LocalDate.now()) // 연동한 날짜(대상 날짜)
-                    .worker(workerId)
-                    .result(ResultType.SUCCESS)
-                    .build();
+            SyncJob existing = existingMap.get(indexInfo.getId());
 
-            syncJobRegistry.add(newSyncJob);
+            if (existing != null) {
+                // 기존 엔티티 업데이트 (Dirty Checking)
+                existing.update(LocalDateTime.now(), workerId, true);
+                jobsToSave.add(existing);
+            } else {
+                // 새 엔티티 생성
+                SyncJob newJob = SyncJob.builder()
+                        .indexInfo(indexInfo)
+                        .jobType(JobType.INDEX_INFO)
+                        .jobTime(LocalDateTime.now())
+                        .targetDate(LocalDate.now())
+                        .worker(workerId)
+                        .result(true)
+                        .build();
+                jobsToSave.add(newJob);
+            }
         }
 
-        if (!syncJobRegistry.isEmpty()) {
-            syncJobRepository.saveAllInBatch(syncJobRegistry);
-        }
-        return syncJobRegistry;
+        // bulk save (insert + update)
+        List<SyncJob> saved = syncJobRepository.saveAll(jobsToSave);
+
+        // DTO 변환
+        return saved.stream()
+                .map(syncJobMapper::toDto)
+                .toList();
     }
+
 
     @Override
     @Transactional
-    public List<SyncJobDto> createIndexDataSyncJob(String workerId, IndexDataSyncRequest request) {
-        // 1. 지수 데이터 DB에 저장
-        List<IndexData> indexDataList = indexDataSyncService.createIndexData(request);
+    public List<SyncJobDto> createSyncJobsOfIndexData(String workerId, IndexDataSyncRequest request) {
 
-        // 2. 연동 정보 DB에 저장
-        List<SyncJobDto> syncJobDtos = createSyncJobsOfIndexData(workerId, indexDataList);
+        // 1. IndexData 조회
+        List<IndexData> indexDataLists = indexDataRepository.findByIndexInfo_IdIn(request.indexInfoIds());
 
-        return syncJobDtos;
-    }
+        // 2. 기존 SyncJob 조회
+        List<SyncJob> existingJobs = syncJobRepository.findByJobTypeAndIndexInfo_IdIn(
+                JobType.INDEX_DATA, request.indexInfoIds()
+        );
 
-    private List<SyncJobDto> createSyncJobsOfIndexData(String workerId, List<IndexData> indexDataList) {
+        List<SyncJob> jobsToSave = new ArrayList<>();
 
-        List<SyncJob> newSyncJobList = indexDataList.stream().map(indexData -> {
-            return SyncJob.builder()
-                    .jobType(JobType.INDEX_DATA)
-                    .indexInfo(indexData.getIndexInfo())
-                    .targetDate(indexData.getBaseDate())
-                    .worker(workerId)
-                    .jobTime(LocalDateTime.now())
-                    .result(true)
-                    .build();
-        }).toList();
+        // 3. 기존 job을 indexInfo.id 기준으로 Map 변환
+        Map<Long, SyncJob> existingMap = existingJobs.stream()
+                .collect(Collectors.toMap(job -> job.getIndexInfo().getId(), job -> job, (a, b) -> a));
 
-        List<SyncJob> filtered = newSyncJobList.stream()
-                .filter(syncJob -> !syncJobRepository.existsByJobTypeAndIndexInfoIdAndTargetDate(
-                        syncJob.getJobType(),
-                        syncJob.getIndexInfo().getId(),
-                        syncJob.getTargetDate()
-                ))
-                .toList();
+        // 4. 신규/기존 job 처리
+        for (IndexData indexData : indexDataLists) {
+            Long indexInfoId = indexData.getIndexInfo().getId();
+            SyncJob existing = existingMap.get(indexInfoId);
 
-        if (!filtered.isEmpty()) {
-            //syncJobRepository.saveAllInBatchWithTargetDate(filtered);
-            syncJobRepository.saveAll(filtered);
+            if (existing != null) {
+                existing.update(LocalDateTime.now(), workerId, true);
+                jobsToSave.add(existing);
+            } else {
+                SyncJob newJob = SyncJob.builder()
+                        .indexInfo(indexData.getIndexInfo())     // 여기서 굳이 다시 findById 할 필요 없음
+                        .jobType(JobType.INDEX_DATA)
+                        .targetDate(indexData.getBaseDate())     // LocalDate.now() 대신 baseDate가 자연스러움
+                        .worker(workerId)
+                        .jobTime(LocalDateTime.now())
+                        .result(true)
+                        .build();
+                jobsToSave.add(newJob);
+            }
         }
-        return newSyncJobList.stream().map(syncJobMapper::toDto).toList();
+
+        // 5. bulk save (insert + update)
+        List<SyncJob> saved = syncJobRepository.saveAll(jobsToSave);
+
+        // 6. DTO 변환
+        return saved.stream()
+                .map(syncJobMapper::toDto)
+                .toList();
     }
+
 
     @Override
     public CursorPageResponseSyncJobDto findAll(SyncJobSearchRequest param) {
+
+        if(param.cursor()!= null) {
+            byte[] decodedCursor = Base64.getDecoder().decode(param.cursor());
+            String cursorStr = new String(decodedCursor, StandardCharsets.UTF_8);
+        }
 
         // 1. 쿼리로 데이터 조회
         List<SyncJob> syncJobList = syncJobRepository.search(param);

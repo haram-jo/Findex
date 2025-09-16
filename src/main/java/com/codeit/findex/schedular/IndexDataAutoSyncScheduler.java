@@ -58,7 +58,7 @@ public class IndexDataAutoSyncScheduler {
                         start.toString(), // "yyyy-MM-dd"
                         end.toString()
                 );
-                basicSyncJobService.createIndexDataSyncJob("system", req);
+                basicSyncJobService.createSyncJobsOfIndexData("system", req);
 
                 // 5) API rate-limit 배려
                 try { Thread.sleep(API_DELAY_MS); } catch (InterruptedException ignored) {}
